@@ -23,7 +23,7 @@ import cz.uhk.umte.borikpa1.businessnews.model.NewsItem;
 import cz.uhk.umte.borikpa1.businessnews.utils.NewsItemsRecyclerViewAdapter;
 import cz.uhk.umte.borikpa1.businessnews.utils.NewsItemsXmlParser;
 
-public class MainActivity extends AppCompatActivity {
+public class NewsActivity extends AppCompatActivity {
 
     List<NewsItem> newsItems;
     private RecyclerView mRecyclerView;
@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_news);
 
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view_newslist);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -64,10 +64,10 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(List<NewsItem> newsItems) {
 
             if (result == 1) {
-                adapter = new NewsItemsRecyclerViewAdapter(MainActivity.this, newsItems);
+                adapter = new NewsItemsRecyclerViewAdapter(NewsActivity.this, newsItems);
                 mRecyclerView.setAdapter(adapter);
             } else {
-                Toast.makeText(MainActivity.this, "Failed to fetch data!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(NewsActivity.this, "Failed to fetch data!", Toast.LENGTH_SHORT).show();
             }
         }
 
