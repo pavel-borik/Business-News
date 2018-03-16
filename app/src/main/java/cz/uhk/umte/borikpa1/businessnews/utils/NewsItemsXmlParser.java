@@ -28,7 +28,7 @@ public class NewsItemsXmlParser {
     }
 
     private List<NewsItem> readFeed(XmlPullParser parser) throws XmlPullParserException, IOException {
-        List<NewsItem> newsItems = new ArrayList();
+        List<NewsItem> newsItems = new ArrayList<>();
 
         parser.require(XmlPullParser.START_TAG, ns, "rss");
         while (parser.next() != XmlPullParser.END_TAG) {
@@ -64,18 +64,25 @@ public class NewsItemsXmlParser {
                 continue;
             }
             String name = parser.getName();
-            if (name.equals("title")) {
-                title = readTitle(parser);
-            } else if (name.equals("description")) {
-                description = readDescription(parser);
-            } else if (name.equals("link")) {
-                link = readLink(parser);
-            } else if (name.equals("pubDate")) {
-                pubDate = readPubDate(parser);
-            } else if (name.equals("media:thumbnail")) {
-                thumbnailUrl = readThumbnailUrl(parser);
-            } else {
-                skip(parser);
+            switch (name) {
+                case "title":
+                    title = readTitle(parser);
+                    break;
+                case "description":
+                    description = readDescription(parser);
+                    break;
+                case "link":
+                    link = readLink(parser);
+                    break;
+                case "pubDate":
+                    pubDate = readPubDate(parser);
+                    break;
+                case "media:thumbnail":
+                    thumbnailUrl = readThumbnailUrl(parser);
+                    break;
+                default:
+                    skip(parser);
+                    break;
             }
         }
         return new NewsItem(title, description, link, pubDate, thumbnailUrl);
@@ -102,6 +109,7 @@ public class NewsItemsXmlParser {
         parser.require(XmlPullParser.START_TAG, ns, "description");
         String description = readText(parser);
         parser.require(XmlPullParser.END_TAG, ns, "description");
+        description = org.apache.commons.lang3.StringEscapeUtils.unescapeXml(description);
         return description;
     }
 
@@ -119,7 +127,6 @@ public class NewsItemsXmlParser {
         if (tag.equals("media:thumbnail")) {
                 thumbnailUrl = parser.getAttributeValue(ns, "url");
                 parser.nextTag();
-
         }
         parser.require(XmlPullParser.END_TAG,ns, "media:thumbnail");
         return thumbnailUrl;
