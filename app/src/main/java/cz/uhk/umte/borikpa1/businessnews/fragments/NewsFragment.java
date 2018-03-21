@@ -66,7 +66,7 @@ public class NewsFragment extends Fragment {
 
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view_newslist);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(rootView.getContext()));
-
+        mRecyclerView.setAdapter(adapter);
         return rootView;
     }
 

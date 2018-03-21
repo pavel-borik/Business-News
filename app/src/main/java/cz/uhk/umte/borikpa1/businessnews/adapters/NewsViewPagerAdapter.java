@@ -8,6 +8,7 @@ import cz.uhk.umte.borikpa1.businessnews.fragments.NewsFragment;
 
 public class NewsViewPagerAdapter extends FragmentStatePagerAdapter {
 
+    NewsFragment newsFragment;
     int numOfTabs;
     public NewsViewPagerAdapter(FragmentManager fm,  int numOfTabs) {
         super(fm);
@@ -19,20 +20,20 @@ public class NewsViewPagerAdapter extends FragmentStatePagerAdapter {
 
         switch (position) {
             case 0:
-               NewsFragment newsFragment = new NewsFragment().newInstance("https://www.cnbc.com/id/10001147/device/rss/rss.html");
+                newsFragment = new NewsFragment().newInstance("https://www.cnbc.com/id/10001147/device/rss/rss.html");
                 return newsFragment;
             case 1:
-                NewsFragment newsFragment2 = new NewsFragment().newInstance("https://www.cnbc.com/id/20910258/device/rss/rss.html");
-                return newsFragment2;
+                newsFragment = new NewsFragment().newInstance("https://www.cnbc.com/id/20910258/device/rss/rss.html");
+                return newsFragment;
             case 2:
-                NewsFragment newsFragment3 = new NewsFragment().newInstance("https://www.cnbc.com/id/10000664/device/rss/rss.html");
-                return newsFragment3;
+                newsFragment = new NewsFragment().newInstance("https://www.cnbc.com/id/10000664/device/rss/rss.html");
+                return newsFragment;
             case 3:
-                NewsFragment newsFragment4 = new NewsFragment().newInstance("http://feeds.bbci.co.uk/news/world/rss.xml");
-                return newsFragment4;
+                newsFragment= new NewsFragment().newInstance("http://feeds.bbci.co.uk/news/world/rss.xml");
+                return newsFragment;
             case 4:
-                NewsFragment newsFragment5 = new NewsFragment().newInstance("http://feeds.bbci.co.uk/news/technology/rss.xml");
-                return newsFragment5;
+                newsFragment = new NewsFragment().newInstance("http://feeds.bbci.co.uk/news/technology/rss.xml");
+                return newsFragment;
             default:
                 return null;
         }

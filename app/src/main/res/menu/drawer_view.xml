@@ -2,16 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_camera"
-            android:title="test" />
+            android:id="@+id/nav_home"
+            android:title="@string/home" />
         <item
-            android:id="@+id/nav_gallery"
-            android:title="test" />
+            android:id="@+id/nav_news"
+            android:title="@string/news" />
         <item
-            android:id="@+id/nav_slideshow"
-            android:title="test" />
-        <item
-            android:id="@+id/nav_manage"
-            android:title="test" />
+            android:id="@+id/nav_stocks"
+            android:title="@string/stock_data" />
+        />
     </group>
 </menu>

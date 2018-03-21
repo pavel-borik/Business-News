@@ -1,4 +1,4 @@
-package cz.uhk.umte.borikpa1.businessnews;
+package cz.uhk.umte.borikpa1.businessnews.activities;
 
 import android.content.Context;
 import android.support.design.widget.NavigationView;
@@ -12,47 +12,30 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
 
+import cz.uhk.umte.borikpa1.businessnews.R;
 import cz.uhk.umte.borikpa1.businessnews.adapters.NewsViewPagerAdapter;
 import cz.uhk.umte.borikpa1.businessnews.adapters.NewsItemsRecyclerViewAdapter;
 
-public class NewsActivity extends AppCompatActivity {
+public class NewsActivity extends BaseActivity {
 
     private NewsItemsRecyclerViewAdapter adapter;
-    private DrawerLayout mDrawerLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_news);
+        //setContentView(R.layout.activity_news);
+        LayoutInflater inflater = (LayoutInflater) this
+                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View contentView = inflater.inflate(R.layout.activity_news,null, false);
+        mainContent.addView(contentView, 0);
+        //setContentView(contentView);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        ActionBar actionbar = getSupportActionBar();
-        actionbar.setDisplayHomeAsUpEnabled(true);
-        actionbar.setHomeAsUpIndicator(R.drawable.ic_menu);
-        mDrawerLayout = findViewById(R.id.drawer_layout);
-
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(
-                new NavigationView.OnNavigationItemSelectedListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(MenuItem menuItem) {
-                        // set item as selected to persist highlight
-                        menuItem.setChecked(true);
-                        // close drawer when item is tapped
-                        mDrawerLayout.closeDrawers();
-
-                        // Add code here to update the UI based on the item selected
-                        // For example, swap UI fragments here
-
-                        return true;
-                    }
-                });
-
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.newsCategoriesTabLayout);
+        TabLayout tabLayout = (TabLayout) contentView.findViewById(R.id.newsCategoriesTabLayout);
         tabLayout.addTab(tabLayout.newTab().setText("Business"));
         tabLayout.addTab(tabLayout.newTab().setText("Economy"));
         tabLayout.addTab(tabLayout.newTab().setText("Finance"));
@@ -88,13 +71,5 @@ public class NewsActivity extends AppCompatActivity {
         return super.onCreateView(name, context, attrs);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                mDrawerLayout.openDrawer(GravityCompat.START);
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+
 }
