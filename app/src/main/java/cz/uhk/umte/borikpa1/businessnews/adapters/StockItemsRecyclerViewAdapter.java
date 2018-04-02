@@ -33,9 +33,9 @@ public class StockItemsRecyclerViewAdapter extends RecyclerView.Adapter<StockIte
     public void onBindViewHolder(@NonNull StocksViewHolder holder, int position) {
        StockItem stockItem= stockItemList.get(position);
        holder.stockSymbol.setText(stockItem.getSymbol());
-       holder.stockCompany.setText("ABC");
-       holder.stockPrice.setText(String.valueOf(stockItem.getClose()));
-       holder.stockDate.setText(stockItem.getDate());
+       holder.stockCompany.setText(stockItem.getCompanyName());
+       holder.stockPrice.setText(String.valueOf(stockItem.getLatestPrice()));
+       holder.stockDate.setText(stockItem.getLatestTime());
 
        if(stockItem.getChange() < 0) {
            holder.stockChange.setTextColor(Color.RED);

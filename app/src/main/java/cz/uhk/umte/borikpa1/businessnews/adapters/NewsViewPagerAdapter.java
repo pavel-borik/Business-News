@@ -10,7 +10,7 @@ public class NewsViewPagerAdapter extends FragmentStatePagerAdapter {
 
     NewsFragment newsFragment;
     int numOfTabs;
-    public NewsViewPagerAdapter(FragmentManager fm,  int numOfTabs) {
+    public NewsViewPagerAdapter(FragmentManager fm, int numOfTabs) {
         super(fm);
         this.numOfTabs = numOfTabs;
     }

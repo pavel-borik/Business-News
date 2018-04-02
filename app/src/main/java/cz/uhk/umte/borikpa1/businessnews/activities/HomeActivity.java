@@ -42,7 +42,7 @@ public class HomeActivity extends BaseActivity {
         Call<StockItem> call = null;
 
         for(String s : symbols) {
-            call = stockClient.getPreviousStockData(s);
+            call = stockClient.getStockData(s);
             call.enqueue(new Callback<StockItem>() {
                 @Override
                 public void onResponse(Call<StockItem> call, Response<StockItem> response) {
