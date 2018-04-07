@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import cz.uhk.umte.borikpa1.businessnews.R;
 import cz.uhk.umte.borikpa1.businessnews.adapters.NewsItemsRecyclerViewAdapter;
@@ -34,6 +35,7 @@ import cz.uhk.umte.borikpa1.businessnews.utils.NewsItemsXmlParser;
 public class NewsFragment extends Fragment {
     private RecyclerView mRecyclerView;
     private NewsItemsRecyclerViewAdapter adapter;
+    private List<NewsItem> newsItemList;
     private static final String ARG_URL = "url";
     private String mUrl;
     private OnFragmentInteractionListener mListener;
@@ -56,6 +58,8 @@ public class NewsFragment extends Fragment {
         if (getArguments() != null) {
             mUrl = getArguments().getString(ARG_URL);
         }
+        newsItemList = new ArrayList<>();
+        adapter = new NewsItemsRecyclerViewAdapter(newsItemList);
         new RssFeedRetriever().execute(mUrl);
     }
 
@@ -63,7 +67,6 @@ public class NewsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView =  inflater.inflate(R.layout.fragment_news, container, false);
-
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view_newslist);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(rootView.getContext()));
         mRecyclerView.setAdapter(adapter);
@@ -124,12 +127,11 @@ public class NewsFragment extends Fragment {
 
         @Override
         protected void onPostExecute(List<NewsItem> newsItems) {
-
             if (result == 1) {
-                adapter = new NewsItemsRecyclerViewAdapter(getActivity(), newsItems);
+                adapter.setNewsItemList(newsItems);
                 mRecyclerView.setAdapter(adapter);
             } else {
-                Toast.makeText(getActivity(), "Failed to fetch data!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Failed to fetch the data", Toast.LENGTH_SHORT).show();
             }
         }
 

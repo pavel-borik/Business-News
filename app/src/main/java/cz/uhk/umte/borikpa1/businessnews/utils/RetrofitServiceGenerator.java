@@ -2,9 +2,20 @@ package cz.uhk.umte.borikpa1.businessnews.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
+import cz.uhk.umte.borikpa1.businessnews.model.StockItem;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -14,7 +25,7 @@ public class RetrofitServiceGenerator {
     private static final OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
     private static Gson gson = new GsonBuilder()
-     //       .registerTypeAdapter(new TypeToken<Map<String, Map<String, StockItem>>>(){}.getType(), new StockTypeAdapter())
+            .registerTypeAdapter(new TypeToken<List<StockItem>>(){}.getType(), new StockTypeAdapter())
             .enableComplexMapKeySerialization()
             .serializeNulls()
             .setDateFormat(DateFormat.LONG)
@@ -35,20 +46,18 @@ public class RetrofitServiceGenerator {
         return retrofit.create(serviceClass);
     }
 
-//    private static class StockTypeAdapter implements JsonDeserializer<Map<String, Map<String, StockItem>>> {
-//        @Override
-//        public Map<String, Map<String, StockItem>> deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-//            Map<String, Map<String, StockItem>> randomList = new HashMap<>();
-//            JsonObject parentJsonObject = element.getAsJsonObject();
-//            Map<String, StockItem> childMap;
-//            for(Map.Entry<String, JsonElement> entry : parentJsonObject.entrySet()){
-//                childMap = new HashMap<>();
-//                for(Map.Entry<String, JsonElement> entry1 : entry.getValue().getAsJsonObject().entrySet()){
-//                    childMap.put(entry1.getKey(), gson.fromJson(entry1.getValue(), StockItem.class));
-//                }
-//                randomList.put(entry.getKey(), childMap);
-//            }
-//            return randomList;
-//        }
-//    }
+    private static class StockTypeAdapter implements JsonDeserializer<List<StockItem>> {
+        @Override
+        public List<StockItem> deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            JsonObject parentJsonObject = element.getAsJsonObject();
+            List<StockItem> stockItemList = new ArrayList<>();
+            for(Map.Entry<String, JsonElement> entry : parentJsonObject.entrySet()) {
+                for(Map.Entry<String, JsonElement> entry1 : entry.getValue().getAsJsonObject().entrySet()) {
+                    StockItem s = gson.fromJson(entry1.getValue(),StockItem.class);
+                    stockItemList.add(s);
+                }
+            }
+            return stockItemList;
+        }
+    }
 }

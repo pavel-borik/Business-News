@@ -9,9 +9,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import cz.uhk.umte.borikpa1.businessnews.R;
@@ -28,7 +31,7 @@ import retrofit2.Response;
  */
 public class StockDataFragment extends Fragment {
 
-    List<StockItem> stockItemList;
+    private List<StockItem> stockItemList;
     private RecyclerView mRecyclerView;
     private StockItemsRecyclerViewAdapter adapter;
     public StockDataFragment() {
@@ -41,49 +44,33 @@ public class StockDataFragment extends Fragment {
 
         mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view_stocklist);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
+        adapter = new StockItemsRecyclerViewAdapter(stockItemList);
+        mRecyclerView.setAdapter(adapter);
 
         stockItemList = new ArrayList<>();
         StockData stockClient  = RetrofitServiceGenerator.createService(StockData.class);
-        List<String> symbols = Arrays.asList("AAPL", "SNAP", "FB", "NFLX", "MSFT");
 
-//        Call<List<StockItem>> call = stockClient.getBatchedStockData("AAPL,SNAP","quote");
-//        call.enqueue(new Callback<List<StockItem>>() {
-//            @Override
-//            public void onResponse(Call<List<StockItem>> call, Response<List<StockItem>> response) {
-//                stockItemList = response.body();
-//                adapter = new StockItemsRecyclerViewAdapter(stockItemList);
-//                mRecyclerView.setAdapter(adapter);
-//            }
-//
-//            @Override
-//            public void onFailure(Call<List<StockItem>> call, Throwable t) {
-//                Log.i("FAIL", t.getMessage());
-//
-//            }
-//        });
+        List<String> symbols = Arrays.asList("AAPL","SNAP","FB","NFLX","MSFT","TSLA","CSCO","AMZN","WOW3","KO","DIS","ORCL","BA","WMT","EBAY","USGE");
+        symbols.sort(String::compareToIgnoreCase);
+        StringBuilder sb = new StringBuilder();
+        symbols.forEach(str -> sb.append(str + ","));
+        String symbolsParam = sb.toString();
+        symbolsParam.replaceAll(", $", "");
 
-        Call<StockItem> call = null;
+        Call<List<StockItem>> call = stockClient.getBatchedStockData(symbolsParam,"quote");
+        call.enqueue(new Callback<List<StockItem>>() {
+            @Override
+            public void onResponse(Call<List<StockItem>> call, Response<List<StockItem>> response) {
+                stockItemList = response.body();
+                adapter.setStockItemList(stockItemList);
+                mRecyclerView.setAdapter(adapter);
+            }
 
-        for(String s : symbols) {
-            call = stockClient.getStockData(s);
-            call.enqueue(new Callback<StockItem>() {
-                @Override
-                public void onResponse(Call<StockItem> call, Response<StockItem> response) {
-                    StockItem s = response.body();
-                    stockItemList.add(s);
-                    adapter = new StockItemsRecyclerViewAdapter(stockItemList);
-                    mRecyclerView.setAdapter(adapter);
-                }
-
-                @Override
-                public void onFailure(Call<StockItem> call, Throwable t) {
-                    Log.i("FAIL", t.getMessage());
-
-                }
-            });
-        }
-        adapter = new StockItemsRecyclerViewAdapter(stockItemList);
-        mRecyclerView.setAdapter(adapter);
+            @Override
+            public void onFailure(Call<List<StockItem>> call, Throwable t) {
+                Toast.makeText( StockDataFragment.super.getContext(),"Failed to fetch the data", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         return view;
     }

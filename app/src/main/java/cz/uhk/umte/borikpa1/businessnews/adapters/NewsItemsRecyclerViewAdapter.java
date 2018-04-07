@@ -21,7 +21,7 @@ import cz.uhk.umte.borikpa1.businessnews.model.NewsItem;
 public class NewsItemsRecyclerViewAdapter extends RecyclerView.Adapter<NewsItemsRecyclerViewAdapter.NewsViewHolder> {
     private List<NewsItem> newsItemList;
 
-    public NewsItemsRecyclerViewAdapter(Context context, List<NewsItem> newsItemList) {
+    public NewsItemsRecyclerViewAdapter(List<NewsItem> newsItemList) {
         this.newsItemList = newsItemList;
     }
 
@@ -70,4 +70,7 @@ public class NewsItemsRecyclerViewAdapter extends RecyclerView.Adapter<NewsItems
         }
     }
 
+    public void setNewsItemList(List<NewsItem> newsItemList) {
+        this.newsItemList = newsItemList;
+    }
 }

@@ -70,4 +70,8 @@ public class StockItemsRecyclerViewAdapter extends RecyclerView.Adapter<StockIte
             this.stockChange = itemView.findViewById(R.id.tvStockChange);
         }
     }
+
+    public void setStockItemList(List<StockItem> stockItemList) {
+        this.stockItemList = stockItemList;
+    }
 }
