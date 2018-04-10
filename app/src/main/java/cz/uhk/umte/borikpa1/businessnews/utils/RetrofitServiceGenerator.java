@@ -26,6 +26,7 @@ public class RetrofitServiceGenerator {
 
     private static Gson gson = new GsonBuilder()
             .registerTypeAdapter(new TypeToken<List<StockItem>>(){}.getType(), new StockTypeAdapter())
+            .registerTypeAdapter(new TypeToken<List<StockItem>>(){}.getType(), new StockTypeAdapter())
             .enableComplexMapKeySerialization()
             .serializeNulls()
             .setDateFormat(DateFormat.LONG)

@@ -14,6 +14,12 @@ public interface StockData {
     Call<StockItem> getStockData(@Path("symbol") String symbol);
 
     //e.g. https://api.iextrading.com/1.0/stock/market/batch?symbols=aapl,fb&types=quote
-    @GET("1.0/stock/market/batch")
+    @GET("1.0/stock/market/batch?displayPercent=true")
     Call<List<StockItem>> getBatchedStockData(@Query("symbols") String symbols, @Query("types") String types);
+
+    @GET("1.0/stock/market/list/gainers?displayPercent=true")
+    Call<StockItem[]> getGainers();
+
+    @GET("1.0/stock/market/list/losers?displayPercent=true")
+    Call<StockItem[]> getLosers();
 }

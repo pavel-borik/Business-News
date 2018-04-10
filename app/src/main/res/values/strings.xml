@@ -3,7 +3,7 @@
     <string name="news">News</string>
     <string name="home">Home</string>
     <string name="stock_data">Stock Data</string>
-
-
-
+    <string name="USD">$</string>
+    <string name="best_today">Best today:</string>
+    <string name="worst_today">Worst today:</string>
 </resources>
