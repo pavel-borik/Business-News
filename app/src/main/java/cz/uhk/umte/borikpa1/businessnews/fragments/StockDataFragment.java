@@ -1,6 +1,7 @@
 package cz.uhk.umte.borikpa1.businessnews.fragments;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,6 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import cz.uhk.umte.borikpa1.businessnews.R;
+import cz.uhk.umte.borikpa1.businessnews.activities.StockDetailActivity;
 import cz.uhk.umte.borikpa1.businessnews.adapters.StockItemsRecyclerViewAdapter;
 import cz.uhk.umte.borikpa1.businessnews.model.StockItem;
 import cz.uhk.umte.borikpa1.businessnews.restinterfaces.StockData;
@@ -44,7 +46,12 @@ public class StockDataFragment extends Fragment {
 
         mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view_stocklist);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
-        adapter = new StockItemsRecyclerViewAdapter(stockItemList);
+        adapter = new StockItemsRecyclerViewAdapter(stockItemList, pos -> {
+            Intent intent = new Intent(getActivity(), StockDetailActivity.class);
+            intent.putExtra("symbol", stockItemList.get(pos).getSymbol());
+            startActivity(intent);
+            Toast.makeText(getActivity(),stockItemList.get(pos).getSymbol(),Toast.LENGTH_LONG).show();
+        });
         mRecyclerView.setAdapter(adapter);
 
         stockItemList = new ArrayList<>();

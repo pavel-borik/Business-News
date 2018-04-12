@@ -46,9 +46,9 @@ public class StockItem {
     @SerializedName("latestTime")
     @Expose
     private String latestTime;
-//    @SerializedName("latestUpdate")
-//    @Expose
-//    private Integer latestUpdate;
+    @SerializedName("latestUpdate")
+    @Expose
+    private Long latestUpdate;
     @SerializedName("latestVolume")
     @Expose
     private Integer latestVolume;
@@ -97,9 +97,9 @@ public class StockItem {
     @SerializedName("iexAskSize")
     @Expose
     private Object iexAskSize;
-//    @SerializedName("marketCap")
-//    @Expose
-//    private Integer marketCap;
+    @SerializedName("marketCap")
+    @Expose
+    private Long marketCap;
     @SerializedName("peRatio")
     @Expose
     private Double peRatio;
@@ -225,13 +225,13 @@ public class StockItem {
         this.latestTime = latestTime;
     }
 
-//    public Integer getLatestUpdate() {
-//        return latestUpdate;
-//    }
-//
-//    public void setLatestUpdate(Integer latestUpdate) {
-//        this.latestUpdate = latestUpdate;
-//    }
+    public Long getLatestUpdate() {
+        return latestUpdate;
+    }
+
+    public void setLatestUpdate(Long latestUpdate) {
+        this.latestUpdate = latestUpdate;
+    }
 
     public Integer getLatestVolume() {
         return latestVolume;
@@ -360,14 +360,14 @@ public class StockItem {
     public void setIexAskSize(Object iexAskSize) {
         this.iexAskSize = iexAskSize;
     }
-//
-//    public Integer getMarketCap() {
-//        return marketCap;
-//    }
-//
-//    public void setMarketCap(Integer marketCap) {
-//        this.marketCap = marketCap;
-//    }
+
+    public Long getMarketCap() {
+        return marketCap;
+    }
+
+    public void setMarketCap(Long marketCap) {
+        this.marketCap = marketCap;
+    }
 
     public Double getPeRatio() {
         return peRatio;

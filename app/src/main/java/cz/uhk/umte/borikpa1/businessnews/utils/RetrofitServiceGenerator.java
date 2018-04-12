@@ -21,7 +21,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitServiceGenerator {
-    private static final String API_BASE_URL = "https://api.iextrading.com/";
+    private static final String API_BASE_URL = "https://api.iextrading.com/1.0/";
     private static final OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
     private static Gson gson = new GsonBuilder()

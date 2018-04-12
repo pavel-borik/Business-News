@@ -17,13 +17,20 @@ import cz.uhk.umte.borikpa1.businessnews.model.StockItem;
 public class StockItemsRecyclerViewAdapter extends RecyclerView.Adapter<StockItemsRecyclerViewAdapter.StocksViewHolder>{
     List<StockItem> stockItemList;
 
-    public StockItemsRecyclerViewAdapter(List<StockItem> stockItemList) {
+    public interface OnItemClickListener {
+        void onItemClick(int pos);
+    }
+
+    private final OnItemClickListener listener;
+
+    public StockItemsRecyclerViewAdapter(List<StockItem> stockItemList, OnItemClickListener listener) {
         this.stockItemList = stockItemList;
+        this.listener = listener;
     }
 
     @NonNull
     @Override
-    public StocksViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public StocksViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int pos) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_stock_item, null);
         StocksViewHolder viewHolder = new StocksViewHolder(view);
         return viewHolder;
@@ -36,6 +43,7 @@ public class StockItemsRecyclerViewAdapter extends RecyclerView.Adapter<StockIte
        holder.stockCompany.setText(stockItem.getCompanyName());
        holder.stockPrice.setText(String.valueOf(stockItem.getLatestPrice()));
        holder.stockDate.setText(stockItem.getLatestTime());
+       holder.bind(position,listener);
 
        if(stockItem.getChange() < 0) {
            holder.stockChange.setTextColor(Color.RED);
@@ -60,6 +68,7 @@ public class StockItemsRecyclerViewAdapter extends RecyclerView.Adapter<StockIte
         protected TextView stockPrice;
         protected TextView stockDate;
         protected TextView stockChange;
+        protected View itemView;
 
         public StocksViewHolder(View itemView) {
             super(itemView);
@@ -68,10 +77,18 @@ public class StockItemsRecyclerViewAdapter extends RecyclerView.Adapter<StockIte
             this.stockPrice = itemView.findViewById(R.id.tvStockPrice);
             this.stockDate = itemView.findViewById(R.id.tvStockDate);
             this.stockChange = itemView.findViewById(R.id.tvStockChange);
+            this.itemView = itemView;
+
+        }
+        public void bind(final int pos, final OnItemClickListener listener) {
+            itemView.setOnClickListener(v -> listener.onItemClick(pos));
         }
     }
 
     public void setStockItemList(List<StockItem> stockItemList) {
         this.stockItemList = stockItemList;
     }
+
+
+
 }
