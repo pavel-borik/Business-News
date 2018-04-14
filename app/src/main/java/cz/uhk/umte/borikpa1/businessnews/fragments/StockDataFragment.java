@@ -3,7 +3,9 @@ package cz.uhk.umte.borikpa1.businessnews.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -32,17 +34,40 @@ import retrofit2.Response;
  * A simple {@link Fragment} subclass.
  */
 public class StockDataFragment extends Fragment {
-
     private List<StockItem> stockItemList;
     private RecyclerView mRecyclerView;
     private StockItemsRecyclerViewAdapter adapter;
+    private SwipeRefreshLayout swipeContainer;
+    private StockData stockClient;
+    private String symbolsParam;
     public StockDataFragment() {
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        stockItemList = new ArrayList<>();
+        stockClient  = RetrofitServiceGenerator.createService(StockData.class);
+        List<String> symbols = Arrays.asList("AAPL","SNAP","FB","NFLX","MSFT","TSLA","CSCO","AMZN","WOW3","KO","DIS","ORCL","BA","WMT","EBAY","USGE");
+        symbols.sort(String::compareToIgnoreCase);
+        StringBuilder sb = new StringBuilder();
+        symbols.forEach(str -> sb.append(str + ","));
+        symbolsParam = sb.toString();
+        symbolsParam.replaceAll(", $", "");
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_stock_data, container, false);
+
+        swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeContainer);
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                updateStockData(symbolsParam, stockClient);
+            }
+        });
 
         mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view_stocklist);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
@@ -54,16 +79,12 @@ public class StockDataFragment extends Fragment {
         });
         mRecyclerView.setAdapter(adapter);
 
-        stockItemList = new ArrayList<>();
-        StockData stockClient  = RetrofitServiceGenerator.createService(StockData.class);
+        updateStockData(symbolsParam,stockClient);
 
-        List<String> symbols = Arrays.asList("AAPL","SNAP","FB","NFLX","MSFT","TSLA","CSCO","AMZN","WOW3","KO","DIS","ORCL","BA","WMT","EBAY","USGE");
-        symbols.sort(String::compareToIgnoreCase);
-        StringBuilder sb = new StringBuilder();
-        symbols.forEach(str -> sb.append(str + ","));
-        String symbolsParam = sb.toString();
-        symbolsParam.replaceAll(", $", "");
+        return view;
+    }
 
+    private void updateStockData (String symbolsParam, StockData stockClient) {
         Call<List<StockItem>> call = stockClient.getBatchedStockData(symbolsParam,"quote");
         call.enqueue(new Callback<List<StockItem>>() {
             @Override
@@ -71,6 +92,7 @@ public class StockDataFragment extends Fragment {
                 stockItemList = response.body();
                 adapter.setStockItemList(stockItemList);
                 mRecyclerView.setAdapter(adapter);
+                swipeContainer.setRefreshing(false);
             }
 
             @Override
@@ -78,8 +100,5 @@ public class StockDataFragment extends Fragment {
                 Toast.makeText( StockDataFragment.super.getContext(),"Failed to fetch the data", Toast.LENGTH_SHORT).show();
             }
         });
-
-        return view;
     }
-
 }

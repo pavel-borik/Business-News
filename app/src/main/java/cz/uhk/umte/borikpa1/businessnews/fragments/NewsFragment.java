@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -39,6 +40,7 @@ public class NewsFragment extends Fragment {
     private static final String ARG_URL = "url";
     private String mUrl;
     private OnFragmentInteractionListener mListener;
+    private SwipeRefreshLayout swipeContainer;
 
     public NewsFragment() {
 
@@ -67,6 +69,14 @@ public class NewsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView =  inflater.inflate(R.layout.fragment_news, container, false);
+        swipeContainer = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainer);
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                new RssFeedRetriever().execute(mUrl);
+            }
+        });
+
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view_newslist);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(rootView.getContext()));
         mRecyclerView.setAdapter(adapter);
@@ -130,8 +140,10 @@ public class NewsFragment extends Fragment {
             if (result == 1) {
                 adapter.setNewsItemList(newsItems);
                 mRecyclerView.setAdapter(adapter);
+                swipeContainer.setRefreshing(false);
             } else {
                 Toast.makeText(getActivity(), "Failed to fetch the data", Toast.LENGTH_SHORT).show();
+                swipeContainer.setRefreshing(false);
             }
         }
 
