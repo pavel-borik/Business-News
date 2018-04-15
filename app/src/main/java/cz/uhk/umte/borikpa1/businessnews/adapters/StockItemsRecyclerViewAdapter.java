@@ -7,6 +7,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.List;
@@ -62,13 +64,14 @@ public class StockItemsRecyclerViewAdapter extends RecyclerView.Adapter<StockIte
         return (null != stockItemList ? stockItemList.size() : 0);
     }
 
-    class StocksViewHolder extends RecyclerView.ViewHolder {
+    public class StocksViewHolder extends RecyclerView.ViewHolder {
         protected TextView stockSymbol;
         protected TextView stockCompany;
         protected TextView stockPrice;
         protected TextView stockDate;
         protected TextView stockChange;
         protected View itemView;
+        public RelativeLayout viewForeground;
 
         public StocksViewHolder(View itemView) {
             super(itemView);
@@ -78,7 +81,7 @@ public class StockItemsRecyclerViewAdapter extends RecyclerView.Adapter<StockIte
             this.stockDate = itemView.findViewById(R.id.tvStockDate);
             this.stockChange = itemView.findViewById(R.id.tvStockChange);
             this.itemView = itemView;
-
+            this.viewForeground = itemView.findViewById(R.id.stockitem_row_view_foreground);
         }
         public void bind(final int pos, final OnItemClickListener listener) {
             itemView.setOnClickListener(v -> listener.onItemClick(pos));
@@ -89,6 +92,9 @@ public class StockItemsRecyclerViewAdapter extends RecyclerView.Adapter<StockIte
         this.stockItemList = stockItemList;
     }
 
-
+    public void removeItem(int pos) {
+        stockItemList.remove(pos);
+        notifyItemRemoved(pos);
+    }
 
 }

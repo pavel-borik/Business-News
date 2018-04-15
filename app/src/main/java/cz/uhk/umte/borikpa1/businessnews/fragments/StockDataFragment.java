@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,7 +25,10 @@ import cz.uhk.umte.borikpa1.businessnews.R;
 import cz.uhk.umte.borikpa1.businessnews.activities.StockDetailActivity;
 import cz.uhk.umte.borikpa1.businessnews.adapters.StockItemsRecyclerViewAdapter;
 import cz.uhk.umte.borikpa1.businessnews.model.StockItem;
+import cz.uhk.umte.borikpa1.businessnews.model.StockSymbol;
 import cz.uhk.umte.borikpa1.businessnews.restinterfaces.StockData;
+import cz.uhk.umte.borikpa1.businessnews.utils.AppDatabase;
+import cz.uhk.umte.borikpa1.businessnews.utils.RecyclerItemTouchHelper;
 import cz.uhk.umte.borikpa1.businessnews.utils.RetrofitServiceGenerator;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -33,13 +37,14 @@ import retrofit2.Response;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class StockDataFragment extends Fragment {
+public class StockDataFragment extends Fragment implements RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
     private List<StockItem> stockItemList;
     private RecyclerView mRecyclerView;
     private StockItemsRecyclerViewAdapter adapter;
     private SwipeRefreshLayout swipeContainer;
     private StockData stockClient;
     private String symbolsParam;
+
     public StockDataFragment() {
     }
 
@@ -48,12 +53,7 @@ public class StockDataFragment extends Fragment {
         super.onCreate(savedInstanceState);
         stockItemList = new ArrayList<>();
         stockClient  = RetrofitServiceGenerator.createService(StockData.class);
-        List<String> symbols = Arrays.asList("AAPL","SNAP","FB","NFLX","MSFT","TSLA","CSCO","AMZN","WOW3","KO","DIS","ORCL","BA","WMT","EBAY","USGE");
-        symbols.sort(String::compareToIgnoreCase);
-        StringBuilder sb = new StringBuilder();
-        symbols.forEach(str -> sb.append(str + ","));
-        symbolsParam = sb.toString();
-        symbolsParam.replaceAll(", $", "");
+        symbolsParam = createSymbolsParam();
     }
 
     @Override
@@ -78,7 +78,8 @@ public class StockDataFragment extends Fragment {
             Toast.makeText(getActivity(),stockItemList.get(pos).getSymbol(),Toast.LENGTH_LONG).show();
         });
         mRecyclerView.setAdapter(adapter);
-
+        ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new RecyclerItemTouchHelper(0, ItemTouchHelper.LEFT, this);
+        new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(mRecyclerView);
         updateStockData(symbolsParam,stockClient);
 
         return view;
@@ -100,5 +101,27 @@ public class StockDataFragment extends Fragment {
                 Toast.makeText( StockDataFragment.super.getContext(),"Failed to fetch the data", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @Override
+    public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position) {
+        StockSymbol stockSymbol = AppDatabase.getAppDatabase(getActivity().getApplicationContext()).stockSymbolDao().getSymbolByTag(stockItemList.get(position).getSymbol());
+        if(stockSymbol != null) {
+            stockSymbol.setWatched(Boolean.FALSE);
+            AppDatabase.getAppDatabase(getActivity().getApplicationContext()).stockSymbolDao().updateSymbol(stockSymbol);
+        }
+        symbolsParam = createSymbolsParam();
+        adapter.removeItem(viewHolder.getAdapterPosition());
+        adapter.notifyDataSetChanged();
+    }
+
+    private String createSymbolsParam() {
+        String res;
+        StringBuilder sb = new StringBuilder();
+        List<StockSymbol> stockSymbols = AppDatabase.getAppDatabase(getActivity().getApplicationContext()).stockSymbolDao().getWatchedSymbols();
+        stockSymbols.forEach(s -> sb.append(s.getSymbol() + ","));
+        res = sb.toString();
+        res.replaceAll(", $", "");
+        return res;
     }
 }

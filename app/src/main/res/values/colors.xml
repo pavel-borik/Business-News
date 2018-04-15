@@ -5,4 +5,5 @@
     <color name="colorAccent">#FF4081</color>
     <color name="colorTrendingDown">#ff0011</color>
     <color name="colorTrendingUp">#03c400</color>
+    <color name="colorDeleteItem">#fa315b</color>
 </resources>

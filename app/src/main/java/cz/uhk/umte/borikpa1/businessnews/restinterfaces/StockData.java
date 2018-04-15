@@ -4,6 +4,7 @@ import java.util.List;
 
 import cz.uhk.umte.borikpa1.businessnews.model.StockItem;
 import cz.uhk.umte.borikpa1.businessnews.model.StockItemTimeSeries;
+import cz.uhk.umte.borikpa1.businessnews.model.StockSymbol;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
