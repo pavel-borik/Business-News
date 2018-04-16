@@ -1,6 +1,13 @@
 package cz.uhk.umte.borikpa1.businessnews.model;
 
-public class NewsItem {
+import android.support.annotation.NonNull;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+public class NewsItem implements Comparable<NewsItem> {
 
     public String title;
     public String description;
@@ -57,5 +64,19 @@ public class NewsItem {
 
     public void setThumbnailUrl(String thumbnailUrl) {
         this.thumbnailUrl = thumbnailUrl;
+    }
+
+    @Override
+    public int compareTo(@NonNull NewsItem o) {
+        DateFormat targetDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm");
+        try {
+            Date dThis = targetDateFormat.parse(getPubDate());
+            Date dObj = targetDateFormat.parse(o.getPubDate());
+            return dObj.compareTo(dThis);
+        } catch (ParseException e1) {
+            e1.printStackTrace();
+        }
+
+        return 0;
     }
 }

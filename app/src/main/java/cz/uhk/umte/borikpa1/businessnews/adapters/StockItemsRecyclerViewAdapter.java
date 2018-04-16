@@ -43,7 +43,7 @@ public class StockItemsRecyclerViewAdapter extends RecyclerView.Adapter<StockIte
        StockItem stockItem= stockItemList.get(position);
        holder.stockSymbol.setText(stockItem.getSymbol());
        holder.stockCompany.setText(stockItem.getCompanyName());
-       holder.stockPrice.setText(String.valueOf(stockItem.getLatestPrice()));
+       holder.stockPrice.setText(String.valueOf((double) Math.round(stockItem.getLatestPrice() * 100) / 100));
        holder.stockDate.setText(stockItem.getLatestTime());
        holder.bind(position,listener);
 
@@ -56,7 +56,7 @@ public class StockItemsRecyclerViewAdapter extends RecyclerView.Adapter<StockIte
            holder.stockChange.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_trending_up_black_24dp,0,0,0);
 
        }
-       holder.stockChange.setText(String.valueOf(stockItem.getChange()));
+       holder.stockChange.setText(String.valueOf((double) Math.round(stockItem.getChange() * 100) / 100));
     }
 
     @Override

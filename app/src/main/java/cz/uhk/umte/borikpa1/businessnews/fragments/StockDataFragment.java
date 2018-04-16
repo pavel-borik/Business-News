@@ -24,6 +24,7 @@ import java.util.List;
 import cz.uhk.umte.borikpa1.businessnews.R;
 import cz.uhk.umte.borikpa1.businessnews.activities.StockDetailActivity;
 import cz.uhk.umte.borikpa1.businessnews.adapters.StockItemsRecyclerViewAdapter;
+import cz.uhk.umte.borikpa1.businessnews.dao.StockSymbolDao;
 import cz.uhk.umte.borikpa1.businessnews.model.StockItem;
 import cz.uhk.umte.borikpa1.businessnews.model.StockSymbol;
 import cz.uhk.umte.borikpa1.businessnews.restinterfaces.StockData;
@@ -44,6 +45,7 @@ public class StockDataFragment extends Fragment implements RecyclerItemTouchHelp
     private SwipeRefreshLayout swipeContainer;
     private StockData stockClient;
     private String symbolsParam;
+    private AppDatabase appDatabase;
 
     public StockDataFragment() {
     }
@@ -51,6 +53,7 @@ public class StockDataFragment extends Fragment implements RecyclerItemTouchHelp
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        appDatabase = AppDatabase.getAppDatabase(getActivity().getApplicationContext());
         stockItemList = new ArrayList<>();
         stockClient  = RetrofitServiceGenerator.createService(StockData.class);
         symbolsParam = createSymbolsParam();
@@ -94,6 +97,7 @@ public class StockDataFragment extends Fragment implements RecyclerItemTouchHelp
                 adapter.setStockItemList(stockItemList);
                 mRecyclerView.setAdapter(adapter);
                 swipeContainer.setRefreshing(false);
+                adapter.notifyDataSetChanged();
             }
 
             @Override
@@ -105,10 +109,10 @@ public class StockDataFragment extends Fragment implements RecyclerItemTouchHelp
 
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction, int position) {
-        StockSymbol stockSymbol = AppDatabase.getAppDatabase(getActivity().getApplicationContext()).stockSymbolDao().getSymbolByTag(stockItemList.get(position).getSymbol());
+        StockSymbol stockSymbol = appDatabase.stockSymbolDao().getSymbolByTag(stockItemList.get(position).getSymbol());
         if(stockSymbol != null) {
             stockSymbol.setWatched(Boolean.FALSE);
-            AppDatabase.getAppDatabase(getActivity().getApplicationContext()).stockSymbolDao().updateSymbol(stockSymbol);
+            appDatabase.stockSymbolDao().updateSymbol(stockSymbol);
         }
         symbolsParam = createSymbolsParam();
         adapter.removeItem(viewHolder.getAdapterPosition());
@@ -118,7 +122,7 @@ public class StockDataFragment extends Fragment implements RecyclerItemTouchHelp
     private String createSymbolsParam() {
         String res;
         StringBuilder sb = new StringBuilder();
-        List<StockSymbol> stockSymbols = AppDatabase.getAppDatabase(getActivity().getApplicationContext()).stockSymbolDao().getWatchedSymbols();
+        List<StockSymbol> stockSymbols = appDatabase.stockSymbolDao().getWatchedSymbols();
         stockSymbols.forEach(s -> sb.append(s.getSymbol() + ","));
         res = sb.toString();
         res.replaceAll(", $", "");

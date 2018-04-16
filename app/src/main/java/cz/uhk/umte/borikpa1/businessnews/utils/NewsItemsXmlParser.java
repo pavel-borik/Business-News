@@ -7,13 +7,21 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import cz.uhk.umte.borikpa1.businessnews.model.NewsItem;
 
 public class NewsItemsXmlParser {
     private static final String ns = null;
+    private DateFormat targetDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm");
+    private List<String> dateFormatStrings = Arrays.asList("EEE, dd MMM yyyy HH:mm zzz", "EEE, dd MMM yyyy HH:mm:ss zzz");
 
     public List<NewsItem> parse(InputStream in) throws XmlPullParserException, IOException {
         try {
@@ -49,6 +57,7 @@ public class NewsItemsXmlParser {
                 }
             }
         }
+        Collections.sort(newsItems);
         return newsItems;
     }
 
@@ -116,6 +125,17 @@ public class NewsItemsXmlParser {
     private String  readPubDate (XmlPullParser parser) throws IOException, XmlPullParserException {
         parser.require(XmlPullParser.START_TAG, ns, "pubDate");
         String pubDate = readText(parser);
+
+        for (String formatString : dateFormatStrings)
+        {
+            try
+            {
+                Date d = new SimpleDateFormat(formatString).parse(pubDate);
+                pubDate = targetDateFormat.format(d);
+            }
+            catch (ParseException e) {}
+        }
+
         parser.require(XmlPullParser.END_TAG, ns, "pubDate");
         return pubDate;
     }
