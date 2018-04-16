@@ -1,20 +1,30 @@
 package cz.uhk.umte.borikpa1.businessnews.activities;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.IMarker;
+import com.github.mikephil.charting.components.MarkerView;
 import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;
+import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.listener.ChartTouchListener;
+import com.github.mikephil.charting.listener.OnChartGestureListener;
+import com.github.mikephil.charting.utils.MPPointF;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +58,6 @@ public class StockDetailActivity extends AppCompatActivity {
         actionbar.setDisplayHomeAsUpEnabled(true);
         actionbar.setTitle(SYMBOL);
         lineChart = findViewById(R.id.lineChartStockTimeSeries);
-        styleLineChart(lineChart);
 
         StockData stockClient  = RetrofitServiceGenerator.createService(StockData.class);
         Call<StockItemTimeSeries[]> call = stockClient.getTimeSeries(SYMBOL, "1d");
@@ -60,7 +69,7 @@ public class StockDetailActivity extends AppCompatActivity {
                 List<String> xLabels = new ArrayList<>();
                 int i = 0;
                 for(StockItemTimeSeries s : stockItemTimeSeries) {
-                    float value = s.getAverage().floatValue();
+                    float value = (float) Math.round(s.getAverage().doubleValue() * 100) / 100;
                     if (value > 0) {
                         entries.add(new Entry((float)i++, value));
                         xLabels.add(s.getLabel());
@@ -70,12 +79,15 @@ public class StockDetailActivity extends AppCompatActivity {
                 dataSet = new LineDataSet(entries, "Price");
                 dataSet.setColor(Color.parseColor("#007e4c"));
                 dataSet.setDrawCircles(false);
-                dataSet.setColor(Color.parseColor("#007e4c"));
+                dataSet.setDrawFilled(true);
+                dataSet.setFillColor(Color.parseColor("#007e4c"));
 
                 lineData = new LineData(dataSet);
                 lineData.setDrawValues(false);
 
+
                 lineChart.setData(lineData);
+                styleLineChart(lineChart);
                 lineChart.getXAxis().setValueFormatter(new MyXAxisValueFormatter(xLabels));
                 lineChart.invalidate();
             }
@@ -91,11 +103,61 @@ public class StockDetailActivity extends AppCompatActivity {
         lineChart.getDescription().setEnabled(false);
         lineChart.setDrawGridBackground(false);
         lineChart.setDrawBorders(true);
+        lineChart.setExtraRightOffset(25);
+        lineChart.setHighlightPerDragEnabled(true);
+        lineChart.setHighlightPerTapEnabled(true);
+        lineChart.setOnChartGestureListener(new OnChartGestureListener() {
+            @Override
+            public void onChartGestureStart(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
+
+            }
+
+            @Override
+            public void onChartGestureEnd(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
+                lineChart.highlightValue(null);
+            }
+
+            @Override
+            public void onChartLongPressed(MotionEvent me) {
+
+            }
+
+            @Override
+            public void onChartDoubleTapped(MotionEvent me) {
+
+            }
+
+            @Override
+            public void onChartSingleTapped(MotionEvent me) {
+
+            }
+
+            @Override
+            public void onChartFling(MotionEvent me1, MotionEvent me2, float velocityX, float velocityY) {
+
+            }
+
+            @Override
+            public void onChartScale(MotionEvent me, float scaleX, float scaleY) {
+
+            }
+
+            @Override
+            public void onChartTranslate(MotionEvent me, float dX, float dY) {
+
+            }
+        });
+        IMarker marker = new MyMarkerView(this,R.layout.chart_marker);
+        lineChart.setMarker(marker);
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(false);
-        xAxis.setLabelCount(5,true);
-        xAxis.setAvoidFirstLastClipping(true);
+        xAxis.setLabelCount(6,true);
+        xAxis.setXOffset(-10);
+        //xAxis.setAvoidFirstLastClipping(true);
+        lineChart.getAxisRight().setEnabled(false);
+        YAxis yAxisLeft = lineChart.getAxisLeft();
+
     }
 
     @Override
@@ -121,5 +183,30 @@ public class StockDetailActivity extends AppCompatActivity {
             return xLabels.get((int)value);
         }
 
+    }
+
+    private class MyMarkerView extends MarkerView {
+        private TextView tvContent;
+        private MPPointF mOffset;
+
+        public MyMarkerView(Context context, int layoutResource) {
+            super(context, layoutResource);
+            tvContent = (TextView) findViewById(R.id.tvContent);
+        }
+
+        @Override
+        public void refreshContent(Entry e, Highlight highlight) {
+            tvContent.setText("" + e.getY());
+            super.refreshContent(e, highlight);
+        }
+
+        @Override
+        public MPPointF getOffset() {
+            if(mOffset == null) {
+                // center the marker horizontally and vertically
+                mOffset = new MPPointF(-(getWidth() / 2), -getHeight());
+            }
+            return mOffset;
+        }
     }
 }

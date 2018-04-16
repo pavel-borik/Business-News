@@ -25,6 +25,6 @@ public interface StockData {
     @GET("stock/market/list/losers?displayPercent=true")
     Call<StockItem[]> getLosers();
 
-    @GET("stock/{symbol}/chart/{range}")
+    @GET("stock/{symbol}/chart/{range}?chartInterval=5")
     Call<StockItemTimeSeries[]> getTimeSeries(@Path("symbol") String symbol, @Path("range") String range);
 }
