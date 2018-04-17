@@ -1,5 +1,6 @@
 package cz.uhk.umte.borikpa1.businessnews.adapters;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
@@ -17,7 +18,8 @@ import cz.uhk.umte.borikpa1.businessnews.R;
 import cz.uhk.umte.borikpa1.businessnews.model.StockItem;
 
 public class StockItemsRecyclerViewAdapter extends RecyclerView.Adapter<StockItemsRecyclerViewAdapter.StocksViewHolder>{
-    List<StockItem> stockItemList;
+    private List<StockItem> stockItemList;
+    private final Context mContext;
 
     public interface OnItemClickListener {
         void onItemClick(int pos);
@@ -25,7 +27,8 @@ public class StockItemsRecyclerViewAdapter extends RecyclerView.Adapter<StockIte
 
     private final OnItemClickListener listener;
 
-    public StockItemsRecyclerViewAdapter(List<StockItem> stockItemList, OnItemClickListener listener) {
+    public StockItemsRecyclerViewAdapter(Context context, List<StockItem> stockItemList, OnItemClickListener listener) {
+        this.mContext = context;
         this.stockItemList = stockItemList;
         this.listener = listener;
     }
@@ -43,20 +46,24 @@ public class StockItemsRecyclerViewAdapter extends RecyclerView.Adapter<StockIte
        StockItem stockItem= stockItemList.get(position);
        holder.stockSymbol.setText(stockItem.getSymbol());
        holder.stockCompany.setText(stockItem.getCompanyName());
-       holder.stockPrice.setText(String.valueOf((double) Math.round(stockItem.getLatestPrice() * 100) / 100));
        holder.stockDate.setText(stockItem.getLatestTime());
-       holder.bind(position,listener);
+       try {
+           holder.stockPrice.setText(String.valueOf((double) Math.round(stockItem.getLatestPrice() * 100) / 100));
+           if(stockItem.getChange() < 0) {
+               holder.stockChange.setTextColor(ContextCompat.getColor(mContext, R.color.colorTrendingDown));
+               holder.stockChange.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_trending_down_black_24dp,0,0,0);
 
-       if(stockItem.getChange() < 0) {
-           holder.stockChange.setTextColor(Color.RED);
-           holder.stockChange.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_trending_down_black_24dp,0,0,0);
+           } else {
+               holder.stockChange.setTextColor(ContextCompat.getColor(mContext, R.color.colorTrendingUp));
+               holder.stockChange.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_trending_up_black_24dp,0,0,0);
 
-       } else {
-           holder.stockChange.setTextColor(Color.GREEN);
-           holder.stockChange.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_trending_up_black_24dp,0,0,0);
-
+           }
+           holder.stockChange.setText(String.valueOf((double) Math.round(stockItem.getChange() * 100) / 100));
        }
-       holder.stockChange.setText(String.valueOf((double) Math.round(stockItem.getChange() * 100) / 100));
+       catch (NullPointerException e) {
+           e.printStackTrace();
+       }
+       holder.bind(position,listener);
     }
 
     @Override

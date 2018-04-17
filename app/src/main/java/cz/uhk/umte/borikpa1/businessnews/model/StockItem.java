@@ -1,117 +1,133 @@
 package cz.uhk.umte.borikpa1.businessnews.model;
 
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+@Entity
 public class StockItem {
+
+    @PrimaryKey(autoGenerate = true)
+    private int id;
     @SerializedName("symbol")
     @Expose
-    private String symbol;
+    public String symbol;
     @SerializedName("companyName")
     @Expose
-    private String companyName;
+    public String companyName;
     @SerializedName("primaryExchange")
     @Expose
-    private String primaryExchange;
+    public String primaryExchange;
     @SerializedName("sector")
     @Expose
-    private String sector;
+    public String sector;
     @SerializedName("calculationPrice")
     @Expose
-    private String calculationPrice;
+    public String calculationPrice;
     @SerializedName("open")
     @Expose
-    private Double open;
+    public Double open;
     @SerializedName("openTime")
     @Expose
-    private Long openTime;
+    public Long openTime;
     @SerializedName("close")
     @Expose
-    private Double close;
+    public Double close;
     @SerializedName("closeTime")
     @Expose
-    private Long closeTime;
+    public Long closeTime;
     @SerializedName("high")
     @Expose
-    private Double high;
+    public Double high;
     @SerializedName("low")
     @Expose
-    private Double low;
+    public Double low;
     @SerializedName("latestPrice")
     @Expose
-    private Double latestPrice;
+    public Double latestPrice;
     @SerializedName("latestSource")
     @Expose
-    private String latestSource;
+    public String latestSource;
     @SerializedName("latestTime")
     @Expose
-    private String latestTime;
+    public String latestTime;
     @SerializedName("latestUpdate")
     @Expose
-    private Long latestUpdate;
+    public Long latestUpdate;
     @SerializedName("latestVolume")
     @Expose
-    private Integer latestVolume;
+    public Long latestVolume;
     @SerializedName("iexRealtimePrice")
     @Expose
-    private Object iexRealtimePrice;
+    public Double iexRealtimePrice;
     @SerializedName("iexRealtimeSize")
     @Expose
-    private Object iexRealtimeSize;
+    public Long iexRealtimeSize;
     @SerializedName("iexLastUpdated")
     @Expose
-    private Object iexLastUpdated;
+    public Long iexLastUpdated;
     @SerializedName("delayedPrice")
     @Expose
-    private Double delayedPrice;
+    public Double delayedPrice;
     @SerializedName("delayedPriceTime")
     @Expose
-    private Long delayedPriceTime;
+    public Long delayedPriceTime;
     @SerializedName("previousClose")
     @Expose
-    private Double previousClose;
+    public Double previousClose;
     @SerializedName("change")
     @Expose
-    private Double change;
+    public Double change;
     @SerializedName("changePercent")
     @Expose
-    private Double changePercent;
+    public Double changePercent;
     @SerializedName("iexMarketPercent")
     @Expose
-    private Object iexMarketPercent;
+    public Double iexMarketPercent;
     @SerializedName("iexVolume")
     @Expose
-    private Object iexVolume;
+    public Long iexVolume;
     @SerializedName("avgTotalVolume")
     @Expose
-    private Integer avgTotalVolume;
+    public Long avgTotalVolume;
     @SerializedName("iexBidPrice")
     @Expose
-    private Object iexBidPrice;
+    public Double iexBidPrice;
     @SerializedName("iexBidSize")
     @Expose
-    private Object iexBidSize;
+    public Long iexBidSize;
     @SerializedName("iexAskPrice")
     @Expose
-    private Object iexAskPrice;
+    public Double iexAskPrice;
     @SerializedName("iexAskSize")
     @Expose
-    private Object iexAskSize;
+    public Long iexAskSize;
     @SerializedName("marketCap")
     @Expose
-    private Long marketCap;
+    public Long marketCap;
     @SerializedName("peRatio")
     @Expose
-    private Double peRatio;
+    public Double peRatio;
     @SerializedName("week52High")
     @Expose
-    private Double week52High;
+    public Double week52High;
     @SerializedName("week52Low")
     @Expose
-    private Double week52Low;
+    public Double week52Low;
     @SerializedName("ytdChange")
     @Expose
-    private Double ytdChange;
+    public Double ytdChange;
+
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getSymbol() {
         return symbol;
@@ -233,35 +249,35 @@ public class StockItem {
         this.latestUpdate = latestUpdate;
     }
 
-    public Integer getLatestVolume() {
+    public Long getLatestVolume() {
         return latestVolume;
     }
 
-    public void setLatestVolume(Integer latestVolume) {
+    public void setLatestVolume(Long latestVolume) {
         this.latestVolume = latestVolume;
     }
 
-    public Object getIexRealtimePrice() {
+    public Double getIexRealtimePrice() {
         return iexRealtimePrice;
     }
 
-    public void setIexRealtimePrice(Object iexRealtimePrice) {
+    public void setIexRealtimePrice(Double iexRealtimePrice) {
         this.iexRealtimePrice = iexRealtimePrice;
     }
 
-    public Object getIexRealtimeSize() {
+    public Long getIexRealtimeSize() {
         return iexRealtimeSize;
     }
 
-    public void setIexRealtimeSize(Object iexRealtimeSize) {
+    public void setIexRealtimeSize(Long iexRealtimeSize) {
         this.iexRealtimeSize = iexRealtimeSize;
     }
 
-    public Object getIexLastUpdated() {
+    public Long getIexLastUpdated() {
         return iexLastUpdated;
     }
 
-    public void setIexLastUpdated(Object iexLastUpdated) {
+    public void setIexLastUpdated(Long iexLastUpdated) {
         this.iexLastUpdated = iexLastUpdated;
     }
 
@@ -305,59 +321,59 @@ public class StockItem {
         this.changePercent = changePercent;
     }
 
-    public Object getIexMarketPercent() {
+    public Double getIexMarketPercent() {
         return iexMarketPercent;
     }
 
-    public void setIexMarketPercent(Object iexMarketPercent) {
+    public void setIexMarketPercent(Double iexMarketPercent) {
         this.iexMarketPercent = iexMarketPercent;
     }
 
-    public Object getIexVolume() {
+    public Long getIexVolume() {
         return iexVolume;
     }
 
-    public void setIexVolume(Object iexVolume) {
+    public void setIexVolume(Long iexVolume) {
         this.iexVolume = iexVolume;
     }
 
-    public Integer getAvgTotalVolume() {
+    public Long getAvgTotalVolume() {
         return avgTotalVolume;
     }
 
-    public void setAvgTotalVolume(Integer avgTotalVolume) {
+    public void setAvgTotalVolume(Long avgTotalVolume) {
         this.avgTotalVolume = avgTotalVolume;
     }
 
-    public Object getIexBidPrice() {
+    public Double getIexBidPrice() {
         return iexBidPrice;
     }
 
-    public void setIexBidPrice(Object iexBidPrice) {
+    public void setIexBidPrice(Double iexBidPrice) {
         this.iexBidPrice = iexBidPrice;
     }
 
-    public Object getIexBidSize() {
+    public Long getIexBidSize() {
         return iexBidSize;
     }
 
-    public void setIexBidSize(Object iexBidSize) {
+    public void setIexBidSize(Long iexBidSize) {
         this.iexBidSize = iexBidSize;
     }
 
-    public Object getIexAskPrice() {
+    public Double getIexAskPrice() {
         return iexAskPrice;
     }
 
-    public void setIexAskPrice(Object iexAskPrice) {
+    public void setIexAskPrice(Double iexAskPrice) {
         this.iexAskPrice = iexAskPrice;
     }
 
-    public Object getIexAskSize() {
+    public Long getIexAskSize() {
         return iexAskSize;
     }
 
-    public void setIexAskSize(Object iexAskSize) {
+    public void setIexAskSize(Long iexAskSize) {
         this.iexAskSize = iexAskSize;
     }
 
@@ -400,5 +416,4 @@ public class StockItem {
     public void setYtdChange(Double ytdChange) {
         this.ytdChange = ytdChange;
     }
-
 }

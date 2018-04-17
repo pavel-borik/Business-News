@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#00e284</color>
-    <color name="colorPrimaryDark">#007e4c</color>
+    <color name="colorPrimary">#f1dd00</color>
+    <color name="colorPrimaryDark">#72620e</color>
     <color name="colorAccent">#FF4081</color>
     <color name="colorTrendingDown">#ff0011</color>
-    <color name="colorTrendingUp">#03c400</color>
+    <color name="colorTrendingUp">#057f02</color>
     <color name="colorDeleteItem">#fa315b</color>
 </resources>

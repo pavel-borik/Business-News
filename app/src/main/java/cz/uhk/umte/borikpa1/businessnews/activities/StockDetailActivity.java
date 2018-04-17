@@ -2,6 +2,7 @@ package cz.uhk.umte.borikpa1.businessnews.activities;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.IMarker;
+import com.github.mikephil.charting.components.LimitLine;
 import com.github.mikephil.charting.components.MarkerView;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
@@ -30,8 +32,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cz.uhk.umte.borikpa1.businessnews.R;
+import cz.uhk.umte.borikpa1.businessnews.model.StockItem;
 import cz.uhk.umte.borikpa1.businessnews.model.StockItemTimeSeries;
 import cz.uhk.umte.borikpa1.businessnews.restinterfaces.StockData;
+import cz.uhk.umte.borikpa1.businessnews.utils.AppDatabase;
 import cz.uhk.umte.borikpa1.businessnews.utils.RetrofitServiceGenerator;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -42,6 +46,7 @@ public class StockDetailActivity extends AppCompatActivity {
     private LineChart lineChart;
     private LineDataSet dataSet;
     private LineData lineData;
+    private StockItem currentStockItem;
     private List<Entry> entries = new ArrayList<>();
     private static String SYMBOL;
 
@@ -51,13 +56,54 @@ public class StockDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_stock_detail);
 
         SYMBOL = getIntent().getStringExtra("symbol");
+        currentStockItem = AppDatabase.getAppDatabase(getApplicationContext()).stockItemDao().getStockItemBySymbol(SYMBOL);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionbar = getSupportActionBar();
         actionbar.setDisplayShowHomeEnabled(true);
         actionbar.setDisplayHomeAsUpEnabled(true);
-        actionbar.setTitle(SYMBOL);
+        actionbar.setTitle(currentStockItem.getCompanyName());
+
+        TextView tvStockSymbol = findViewById(R.id.tvStockDetailSymbol);
+        TextView tvStockValue = findViewById(R.id.tvStockDetailValue);
+        TextView tvStockDateTime = findViewById(R.id.tvStockDetailDateTime);
+        TextView tvStockDetailChange = findViewById(R.id.tvStockDetailChange);
+        TextView tvStockDetailChangePct = findViewById(R.id.tvStockDetailChangePct);
+
+        tvStockSymbol.setText(currentStockItem.getSymbol());
+        tvStockValue.setText(currentStockItem.getLatestPrice().toString());
+        tvStockDateTime.setText(currentStockItem.getLatestTime());
+
+        double change = 0d;
+        String changeStr = "";
+        String changePctStr = "";
+        try {
+            change = (double)Math.round(currentStockItem.getChange().doubleValue()*100)/100;
+            changeStr = String.valueOf(change);
+            changePctStr = String.valueOf((double)Math.round(currentStockItem.getChangePercent().doubleValue()*100)/100);
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+
+        if (change >=0) {
+            changeStr = "+" + changeStr;
+            changePctStr = "(+" + changePctStr + "%)";
+            tvStockDetailChange.setText(changeStr);
+            tvStockDetailChangePct.setText(changePctStr);
+            tvStockDetailChange.setTextColor(getResources().getColor(R.color.colorTrendingUp, getTheme()));
+            tvStockDetailChangePct.setTextColor(getResources().getColor(R.color.colorTrendingUp, getTheme()));
+
+        } else {
+            changeStr = "-" + changeStr;
+            changePctStr = "(-" + changePctStr + "%)";
+            tvStockDetailChange.setText(changeStr);
+            tvStockDetailChangePct.setText(changePctStr);
+            tvStockDetailChange.setTextColor(getResources().getColor(R.color.colorTrendingDown, getTheme()));
+            tvStockDetailChangePct.setTextColor(getResources().getColor(R.color.colorTrendingDown, getTheme()));
+        }
+
         lineChart = findViewById(R.id.lineChartStockTimeSeries);
+        styleLineChart(lineChart);
 
         StockData stockClient  = RetrofitServiceGenerator.createService(StockData.class);
         Call<StockItemTimeSeries[]> call = stockClient.getTimeSeries(SYMBOL, "1d");
@@ -66,6 +112,7 @@ public class StockDetailActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<StockItemTimeSeries[]> call, Response<StockItemTimeSeries[]> response) {
                 StockItemTimeSeries[] stockItemTimeSeries = response.body();
+                if(stockItemTimeSeries == null) return;
                 List<String> xLabels = new ArrayList<>();
                 int i = 0;
                 for(StockItemTimeSeries s : stockItemTimeSeries) {
@@ -76,20 +123,21 @@ public class StockDetailActivity extends AppCompatActivity {
                     }
 
                 }
-                dataSet = new LineDataSet(entries, "Price");
-                dataSet.setColor(Color.parseColor("#007e4c"));
-                dataSet.setDrawCircles(false);
-                dataSet.setDrawFilled(true);
-                dataSet.setFillColor(Color.parseColor("#007e4c"));
+                if(entries.size() > 0) {
+                    dataSet = new LineDataSet(entries, "Price");
+                    dataSet.setColor(Color.parseColor("#007e4c"));
+                    dataSet.setDrawCircles(false);
+                    dataSet.setDrawFilled(true);
+                    dataSet.setFillColor(Color.parseColor("#007e4c"));
 
-                lineData = new LineData(dataSet);
-                lineData.setDrawValues(false);
+                    lineData = new LineData(dataSet);
+                    lineData.setDrawValues(false);
 
+                    lineChart.setData(lineData);
+                    lineChart.getXAxis().setValueFormatter(new MyXAxisValueFormatter(xLabels));
+                    lineChart.invalidate();
+                }
 
-                lineChart.setData(lineData);
-                styleLineChart(lineChart);
-                lineChart.getXAxis().setValueFormatter(new MyXAxisValueFormatter(xLabels));
-                lineChart.invalidate();
             }
 
             @Override
@@ -157,7 +205,12 @@ public class StockDetailActivity extends AppCompatActivity {
         //xAxis.setAvoidFirstLastClipping(true);
         lineChart.getAxisRight().setEnabled(false);
         YAxis yAxisLeft = lineChart.getAxisLeft();
-
+        LimitLine prevClose = new LimitLine(currentStockItem.getClose().floatValue(), "Previous close");
+        prevClose.setLineWidth(1f);
+        prevClose.enableDashedLine(30f, 10f, 0f);
+        prevClose.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_BOTTOM);
+        prevClose.setTextSize(8f);
+        yAxisLeft.addLimitLine(prevClose);
     }
 
     @Override

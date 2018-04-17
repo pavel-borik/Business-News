@@ -75,11 +75,18 @@ public class HomeFragment extends Fragment {
             @Override
             public void onResponse(Call<StockItem[]> call, Response<StockItem[]> response) {
                 StockItem[] stockItems = response.body();
-                tvGainerSymbol.setText(stockItems[0].getSymbol());
-                tvGainerCompany.setText(stockItems[0].getCompanyName());
-                tvGainerPrice.setText(String.valueOf(stockItems[0].getLatestPrice()));
-                tvGainerChange.setText(String.valueOf((double)Math.round(stockItems[0].getChange()*100) / 100));
-                tvGainerChangePct.setText(String.valueOf((double)Math.round(stockItems[0].getChangePercent()*100) / 100));
+                if(stockItems != null) {
+                    StockItem stockItem = stockItems[0];
+                    tvGainerSymbol.setText(stockItem.getSymbol());
+                    tvGainerCompany.setText(stockItem.getCompanyName());
+                    try {
+                        tvGainerPrice.setText(String.valueOf(stockItem.getLatestPrice()));
+                        tvGainerChange.setText(String.valueOf((double)Math.round(stockItem.getChange()*100) / 100));
+                        tvGainerChangePct.setText(String.valueOf((double)Math.round(stockItem.getChangePercent()*100) / 100));
+                    } catch (NullPointerException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
 
             @Override
@@ -94,11 +101,18 @@ public class HomeFragment extends Fragment {
             @Override
             public void onResponse(Call<StockItem[]> call, Response<StockItem[]> response) {
                 StockItem[] stockItems = response.body();
-                tvLoserSymbol.setText(stockItems[0].getSymbol());
-                tvLoserCompany.setText(stockItems[0].getCompanyName());
-                tvLoserPrice.setText(String.valueOf(stockItems[0].getLatestPrice()));
-                tvLoserChange.setText(String.valueOf((double)Math.round(stockItems[0].getChange()*100) / 100));
-                tvLoserChangePct.setText(String.valueOf((double)Math.round(stockItems[0].getChangePercent()*100) / 100));
+                if(stockItems != null) {
+                    StockItem stockItem = stockItems[0];
+                    tvLoserSymbol.setText(stockItem.getSymbol());
+                    tvLoserCompany.setText(stockItem.getCompanyName());
+                    try {
+                        tvLoserPrice.setText(String.valueOf(stockItem.getLatestPrice()));
+                        tvLoserChange.setText(String.valueOf((double) Math.round(stockItem.getChange() * 100) / 100));
+                        tvLoserChangePct.setText(String.valueOf((double) Math.round(stockItem.getChangePercent() * 100) / 100));
+                    } catch (NullPointerException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
 
             @Override

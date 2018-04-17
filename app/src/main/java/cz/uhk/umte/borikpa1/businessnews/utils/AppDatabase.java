@@ -7,14 +7,17 @@ import android.arch.persistence.room.RoomDatabase;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import cz.uhk.umte.borikpa1.businessnews.dao.StockItemDao;
 import cz.uhk.umte.borikpa1.businessnews.dao.StockSymbolDao;
+import cz.uhk.umte.borikpa1.businessnews.model.StockItem;
 import cz.uhk.umte.borikpa1.businessnews.model.StockSymbol;
 
-@Database(entities = {StockSymbol.class}, version = 1, exportSchema = false)
+@Database(entities = {StockSymbol.class, StockItem.class}, version = 1, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase{
     private static AppDatabase INSTANCE;
 
     public abstract StockSymbolDao stockSymbolDao();
+    public abstract StockItemDao stockItemDao();
 
     public static AppDatabase getAppDatabase(Context context) {
         if (INSTANCE == null) {

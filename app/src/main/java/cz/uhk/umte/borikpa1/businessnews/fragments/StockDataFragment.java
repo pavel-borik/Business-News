@@ -1,7 +1,10 @@
 package cz.uhk.umte.borikpa1.businessnews.fragments;
 
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -74,37 +77,48 @@ public class StockDataFragment extends Fragment implements RecyclerItemTouchHelp
 
         mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view_stocklist);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
-        adapter = new StockItemsRecyclerViewAdapter(stockItemList, pos -> {
+        adapter = new StockItemsRecyclerViewAdapter(getContext(), stockItemList, pos -> {
             Intent intent = new Intent(getActivity(), StockDetailActivity.class);
             intent.putExtra("symbol", stockItemList.get(pos).getSymbol());
             startActivity(intent);
-            Toast.makeText(getActivity(),stockItemList.get(pos).getSymbol(),Toast.LENGTH_LONG).show();
         });
         mRecyclerView.setAdapter(adapter);
         ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new RecyclerItemTouchHelper(0, ItemTouchHelper.LEFT, this);
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(mRecyclerView);
+
         updateStockData(symbolsParam,stockClient);
 
         return view;
     }
 
     private void updateStockData (String symbolsParam, StockData stockClient) {
-        Call<List<StockItem>> call = stockClient.getBatchedStockData(symbolsParam,"quote");
-        call.enqueue(new Callback<List<StockItem>>() {
-            @Override
-            public void onResponse(Call<List<StockItem>> call, Response<List<StockItem>> response) {
-                stockItemList = response.body();
-                adapter.setStockItemList(stockItemList);
-                mRecyclerView.setAdapter(adapter);
-                swipeContainer.setRefreshing(false);
-                adapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onFailure(Call<List<StockItem>> call, Throwable t) {
-                Toast.makeText( StockDataFragment.super.getContext(),"Failed to fetch the data", Toast.LENGTH_SHORT).show();
-            }
-        });
+        if(!isNetworkConnected()) {
+            stockItemList = appDatabase.stockItemDao().getAllStockItems();
+            adapter.setStockItemList(stockItemList);
+            mRecyclerView.setAdapter(adapter);
+            adapter.notifyDataSetChanged();
+            swipeContainer.setRefreshing(false);
+        } else {
+            Call<List<StockItem>> call = stockClient.getBatchedStockData(symbolsParam, "quote");
+            call.enqueue(new Callback<List<StockItem>>() {
+                @Override
+                public void onResponse(Call<List<StockItem>> call, Response<List<StockItem>> response) {
+                    stockItemList = response.body();
+                    adapter.setStockItemList(stockItemList);
+                    mRecyclerView.setAdapter(adapter);
+                    swipeContainer.setRefreshing(false);
+                    adapter.notifyDataSetChanged();
+                    if (stockItemList != null) {
+                        appDatabase.stockItemDao().deleteAllStockItems();
+                        appDatabase.stockItemDao().insertAllStockItems(stockItemList);
+                    }
+                }
+                @Override
+                public void onFailure(Call<List<StockItem>> call, Throwable t) {
+                    Toast.makeText(StockDataFragment.super.getContext(), "Failed to fetch the data", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     @Override
@@ -127,5 +141,14 @@ public class StockDataFragment extends Fragment implements RecyclerItemTouchHelp
         res = sb.toString();
         res.replaceAll(", $", "");
         return res;
+    }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm =
+                (ConnectivityManager)getActivity().getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null &&
+                activeNetwork.isConnectedOrConnecting();
     }
 }
