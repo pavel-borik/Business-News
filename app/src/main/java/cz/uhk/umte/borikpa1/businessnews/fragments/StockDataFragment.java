@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -19,15 +20,11 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import cz.uhk.umte.borikpa1.businessnews.R;
 import cz.uhk.umte.borikpa1.businessnews.activities.StockDetailActivity;
 import cz.uhk.umte.borikpa1.businessnews.adapters.StockItemsRecyclerViewAdapter;
-import cz.uhk.umte.borikpa1.businessnews.dao.StockSymbolDao;
 import cz.uhk.umte.borikpa1.businessnews.model.StockItem;
 import cz.uhk.umte.borikpa1.businessnews.model.StockSymbol;
 import cz.uhk.umte.borikpa1.businessnews.restinterfaces.StockData;
@@ -47,8 +44,9 @@ public class StockDataFragment extends Fragment implements RecyclerItemTouchHelp
     private StockItemsRecyclerViewAdapter adapter;
     private SwipeRefreshLayout swipeContainer;
     private StockData stockClient;
-    private String symbolsParam;
     private AppDatabase appDatabase;
+    private List<StockSymbol> stockSymbols;
+    private String symbolsParam;
 
     public StockDataFragment() {
     }
@@ -57,23 +55,15 @@ public class StockDataFragment extends Fragment implements RecyclerItemTouchHelp
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         appDatabase = AppDatabase.getAppDatabase(getActivity().getApplicationContext());
-        stockItemList = new ArrayList<>();
         stockClient  = RetrofitServiceGenerator.createService(StockData.class);
-        symbolsParam = createSymbolsParam();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_stock_data, container, false);
-
         swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeContainer);
-        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                updateStockData(symbolsParam, stockClient);
-            }
-        });
+        swipeContainer.setOnRefreshListener(() -> new StockDataLoader().execute());
 
         mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view_stocklist);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
@@ -86,7 +76,7 @@ public class StockDataFragment extends Fragment implements RecyclerItemTouchHelp
         ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new RecyclerItemTouchHelper(0, ItemTouchHelper.LEFT, this);
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(mRecyclerView);
 
-        updateStockData(symbolsParam,stockClient);
+        new StockDataLoader().execute();
 
         return view;
     }
@@ -109,13 +99,16 @@ public class StockDataFragment extends Fragment implements RecyclerItemTouchHelp
                     swipeContainer.setRefreshing(false);
                     adapter.notifyDataSetChanged();
                     if (stockItemList != null) {
-                        appDatabase.stockItemDao().deleteAllStockItems();
-                        appDatabase.stockItemDao().insertAllStockItems(stockItemList);
+                        new DbStockDataUpdater().execute();
                     }
+                    System.out.println(symbolsParam);
+
                 }
                 @Override
                 public void onFailure(Call<List<StockItem>> call, Throwable t) {
                     Toast.makeText(StockDataFragment.super.getContext(), "Failed to fetch the data", Toast.LENGTH_SHORT).show();
+                    Log.e("Error", t.getMessage());
+                    System.out.println(symbolsParam);
                 }
             });
         }
@@ -128,19 +121,9 @@ public class StockDataFragment extends Fragment implements RecyclerItemTouchHelp
             stockSymbol.setWatched(Boolean.FALSE);
             appDatabase.stockSymbolDao().updateSymbol(stockSymbol);
         }
-        symbolsParam = createSymbolsParam();
+        new StockDataLoader().execute();
         adapter.removeItem(viewHolder.getAdapterPosition());
         adapter.notifyDataSetChanged();
-    }
-
-    private String createSymbolsParam() {
-        String res;
-        StringBuilder sb = new StringBuilder();
-        List<StockSymbol> stockSymbols = appDatabase.stockSymbolDao().getWatchedSymbols();
-        stockSymbols.forEach(s -> sb.append(s.getSymbol() + ","));
-        res = sb.toString();
-        res.replaceAll(", $", "");
-        return res;
     }
 
     private boolean isNetworkConnected() {
@@ -150,5 +133,32 @@ public class StockDataFragment extends Fragment implements RecyclerItemTouchHelp
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         return activeNetwork != null &&
                 activeNetwork.isConnectedOrConnecting();
+    }
+
+    private class StockDataLoader extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... voids) {
+            StringBuilder sb = new StringBuilder();
+            stockSymbols = appDatabase.stockSymbolDao().getWatchedSymbols();
+            stockSymbols.forEach(s -> sb.append(s.getSymbol() + ","));
+            symbolsParam = sb.toString().replaceAll(", $", "");
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            updateStockData(symbolsParam,stockClient);
+        }
+    }
+
+    private class DbStockDataUpdater extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... voids) {
+            if (stockItemList != null) {
+                appDatabase.stockItemDao().deleteAllStockItems();
+                appDatabase.stockItemDao().insertAllStockItems(stockItemList);
+            }
+            return null;
+        }
     }
 }

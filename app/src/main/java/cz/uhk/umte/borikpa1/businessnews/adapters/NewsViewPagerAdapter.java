@@ -8,8 +8,9 @@ import cz.uhk.umte.borikpa1.businessnews.fragments.NewsFragment;
 
 public class NewsViewPagerAdapter extends FragmentStatePagerAdapter {
 
-    NewsFragment newsFragment;
-    int numOfTabs;
+    private NewsFragment newsFragment;
+    private int numOfTabs;
+
     public NewsViewPagerAdapter(FragmentManager fm, int numOfTabs) {
         super(fm);
         this.numOfTabs = numOfTabs;

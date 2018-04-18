@@ -1,5 +1,5 @@
 package cz.uhk.umte.borikpa1.businessnews.fragments;
-
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -11,35 +11,24 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.URLUtil;
 import android.widget.Toast;
 import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import cz.uhk.umte.borikpa1.businessnews.R;
 import cz.uhk.umte.borikpa1.businessnews.adapters.NewsItemsRecyclerViewAdapter;
 import cz.uhk.umte.borikpa1.businessnews.model.NewsItem;
-import cz.uhk.umte.borikpa1.businessnews.utils.NewsItemsXmlParser;
+import cz.uhk.umte.borikpa1.businessnews.utils.XmlDownloadHelper;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link NewsFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link NewsFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class NewsFragment extends Fragment {
     private RecyclerView mRecyclerView;
     private NewsItemsRecyclerViewAdapter adapter;
     private List<NewsItem> newsItemList;
     private static final String ARG_URL = "url";
     private String mUrl;
-    private OnFragmentInteractionListener mListener;
     private SwipeRefreshLayout swipeContainer;
 
     public NewsFragment() {
@@ -60,8 +49,7 @@ public class NewsFragment extends Fragment {
         if (getArguments() != null) {
             mUrl = getArguments().getString(ARG_URL);
         }
-        newsItemList = new ArrayList<>();
-        adapter = new NewsItemsRecyclerViewAdapter(newsItemList);
+
         new RssFeedRetriever().execute(mUrl);
     }
 
@@ -77,58 +65,27 @@ public class NewsFragment extends Fragment {
             }
         });
 
+        adapter = new NewsItemsRecyclerViewAdapter(newsItemList, pos -> {
+            String url = newsItemList.get(pos).getLink();
+            if(url != null) {
+                if(URLUtil.isValidUrl(url)) {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(browserIntent);
+                }
+            }
+        });
+
         mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view_newslist);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(rootView.getContext()));
         mRecyclerView.setAdapter(adapter);
         return rootView;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
-//    @Override
-//    public void onAttach(Context context) {
-//        super.onAttach(context);
-//        if (context instanceof OnFragmentInteractionListener) {
-//            mListener = (OnFragmentInteractionListener) context;
-//        } else {
-//            throw new RuntimeException(context.toString()
-//                    + " must implement OnFragmentInteractionListener");
-//        }
-//    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
-    }
-
     private class RssFeedRetriever extends AsyncTask<String, Void, List<NewsItem>> {
-        int result;
         @Override
         protected List<NewsItem> doInBackground(String... urls) {
-            result = 0;
             try {
-                return loadXmlFromNetwork(urls[0]);
+                return XmlDownloadHelper.loadXmlFromNetwork(urls[0]);
             } catch (IOException | XmlPullParserException e) {
                 Log.e("Error ", e.getMessage());
             }
@@ -137,43 +94,16 @@ public class NewsFragment extends Fragment {
 
         @Override
         protected void onPostExecute(List<NewsItem> newsItems) {
-            if (result == 1) {
+            if (newsItems != null) {
+                newsItemList = newsItems;
                 adapter.setNewsItemList(newsItems);
                 mRecyclerView.setAdapter(adapter);
                 swipeContainer.setRefreshing(false);
+                adapter.notifyDataSetChanged();
             } else {
                 Toast.makeText(getActivity(), "Failed to fetch the data", Toast.LENGTH_SHORT).show();
                 swipeContainer.setRefreshing(false);
             }
-        }
-
-        private List<NewsItem> loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
-            InputStream stream = null;
-            NewsItemsXmlParser newsItemsXmlParser = new NewsItemsXmlParser();
-            List<NewsItem> newsItems;
-
-            try {
-                stream = downloadUrl(urlString);
-                newsItems = newsItemsXmlParser.parse(stream);
-            } finally {
-                if (stream != null) {
-                    stream.close();
-                }
-            }
-            return newsItems;
-        }
-
-        private InputStream downloadUrl(String urlString) throws IOException {
-            URL url = new URL(urlString);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(10000 /* milliseconds */);
-            conn.setConnectTimeout(15000 /* milliseconds */);
-            conn.setRequestMethod("GET");
-            conn.setDoInput(true);
-            conn.connect();
-            int statusCode = conn.getResponseCode();
-            if (statusCode == 200) result = 1;
-            return conn.getInputStream();
         }
     }
 }

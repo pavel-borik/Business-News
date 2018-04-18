@@ -137,7 +137,6 @@ public class StockDetailActivity extends AppCompatActivity {
                     lineChart.getXAxis().setValueFormatter(new MyXAxisValueFormatter(xLabels));
                     lineChart.invalidate();
                 }
-
             }
 
             @Override
@@ -233,9 +232,9 @@ public class StockDetailActivity extends AppCompatActivity {
 
         @Override
         public String getFormattedValue(float value, AxisBase axis) {
-            return xLabels.get((int)value);
+            if(xLabels.size() > 0) return xLabels.get((int)value);
+            return "";
         }
-
     }
 
     private class MyMarkerView extends MarkerView {
