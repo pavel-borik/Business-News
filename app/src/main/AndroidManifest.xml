@@ -20,7 +20,12 @@
             </intent-filter>
         </activity>
         <activity android:name=".activities.HomeActivity" />
-        <activity android:name=".activities.StockDetailActivity"></activity>
+        <activity android:name=".activities.StockDetailActivity" />
+        <activity android:name=".activities.SearchActivity"></activity>
+
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
     </application>
 
 </manifest>

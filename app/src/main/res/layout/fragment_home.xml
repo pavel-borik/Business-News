@@ -69,7 +69,8 @@
                         <TextView
                             android:id="@+id/gainerStockPrice"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/lato" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -87,6 +88,7 @@
                             android:id="@+id/gainerStockChange"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:fontFamily="@font/lato"
                             android:textColor="@color/colorTrendingUp" />
 
                         <TextView
@@ -100,6 +102,7 @@
                             android:id="@+id/gainerStockChangePct"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:fontFamily="@font/lato"
                             android:textColor="@color/colorTrendingUp" />
 
                         <TextView
@@ -152,6 +155,7 @@
                         android:id="@+id/loserStockPrice"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/lato"
                         android:textSize="14sp" />
                 </LinearLayout>
 
@@ -164,6 +168,7 @@
                         android:id="@+id/loserStockChange"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/lato"
                         android:textColor="@color/colorTrendingDown"
                         android:textSize="14sp" />
 
@@ -178,6 +183,7 @@
                         android:id="@+id/loserStockChangePct"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/lato"
                         android:textColor="@color/colorTrendingDown"
                         android:textSize="14sp" />
 

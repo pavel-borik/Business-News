@@ -4,6 +4,7 @@ import java.util.List;
 
 import cz.uhk.umte.borikpa1.businessnews.model.StockItem;
 import cz.uhk.umte.borikpa1.businessnews.model.StockItemTimeSeries;
+import cz.uhk.umte.borikpa1.businessnews.model.StockLogo;
 import cz.uhk.umte.borikpa1.businessnews.model.StockSymbol;
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -27,4 +28,7 @@ public interface StockData {
 
     @GET("stock/{symbol}/chart/{range}?chartInterval=5")
     Call<StockItemTimeSeries[]> getTimeSeries(@Path("symbol") String symbol, @Path("range") String range);
+
+    @GET("stock/market/batch")
+    Call<List<StockLogo>> getLogoUrl(@Query("symbols") String symbols, @Query("types") String types);
 }

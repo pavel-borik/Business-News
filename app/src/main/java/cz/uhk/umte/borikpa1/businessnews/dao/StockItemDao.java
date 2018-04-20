@@ -27,4 +27,6 @@ public interface StockItemDao {
     @Query("Delete from StockItem")
     void deleteAllStockItems();
 
+    @Query("Delete from StockItem where symbol = :symbol")
+    void deleteStockItemBySymbol(String symbol);
 }

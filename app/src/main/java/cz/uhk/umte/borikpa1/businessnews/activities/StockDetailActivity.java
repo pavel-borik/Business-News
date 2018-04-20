@@ -2,18 +2,19 @@ package cz.uhk.umte.borikpa1.businessnews.activities;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.support.v4.content.ContextCompat;
+import android.os.AsyncTask;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
-import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.IMarker;
 import com.github.mikephil.charting.components.LimitLine;
 import com.github.mikephil.charting.components.MarkerView;
@@ -28,48 +29,186 @@ import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.utils.MPPointF;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import cz.uhk.umte.borikpa1.businessnews.R;
 import cz.uhk.umte.borikpa1.businessnews.model.StockItem;
 import cz.uhk.umte.borikpa1.businessnews.model.StockItemTimeSeries;
+import cz.uhk.umte.borikpa1.businessnews.model.StockSymbol;
 import cz.uhk.umte.borikpa1.businessnews.restinterfaces.StockData;
 import cz.uhk.umte.borikpa1.businessnews.utils.AppDatabase;
 import cz.uhk.umte.borikpa1.businessnews.utils.RetrofitServiceGenerator;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class StockDetailActivity extends AppCompatActivity {
 
+    private AppDatabase appDatabase;
     private LineChart lineChart;
     private LineDataSet dataSet;
     private LineData lineData;
     private StockItem currentStockItem;
     private List<Entry> entries = new ArrayList<>();
+    private StockData stockClient;
     private static String SYMBOL;
+    private static final String FOLLOW ="follow";
+    private static final String UNFOLLOW ="unfollow";
+    private String range = "1d";
+    private boolean initiallyFollowed;
+
+    private TextView tvStockSymbol;
+    private TextView tvStockValue;
+    private TextView tvStockDateTime;
+    private TextView tvStockDetailChange;
+    private TextView tvStockDetailChangePct;
+    private ActionBar actionbar;
+    private ToggleButton tbFollow;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stock_detail);
 
+        appDatabase = AppDatabase.getAppDatabase(getApplicationContext());
+        stockClient  = RetrofitServiceGenerator.createService(StockData.class);
         SYMBOL = getIntent().getStringExtra("symbol");
         currentStockItem = AppDatabase.getAppDatabase(getApplicationContext()).stockItemDao().getStockItemBySymbol(SYMBOL);
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        ActionBar actionbar = getSupportActionBar();
+        actionbar = getSupportActionBar();
         actionbar.setDisplayShowHomeEnabled(true);
         actionbar.setDisplayHomeAsUpEnabled(true);
+
+        tvStockSymbol = findViewById(R.id.tvStockDetailSymbol);
+        tvStockValue = findViewById(R.id.tvStockDetailValue);
+        tvStockDateTime = findViewById(R.id.tvStockDetailDateTime);
+        tvStockDetailChange = findViewById(R.id.tvStockDetailChange);
+        tvStockDetailChangePct = findViewById(R.id.tvStockDetailChangePct);
+        tbFollow = findViewById(R.id.toggleButtonFollow);
+        tbFollow.setOnClickListener(v -> {
+            if (tbFollow.isChecked() && !initiallyFollowed) {
+                new DbSymbolUpdater().execute(FOLLOW);
+            }
+            else if (!tbFollow.isChecked() && initiallyFollowed) {
+                new DbSymbolUpdater().execute(UNFOLLOW);
+            }
+        });
+        lineChart = findViewById(R.id.lineChartStockTimeSeries);
+
+        if(currentStockItem == null) {
+            new StockItemLoader().execute(SYMBOL);
+            tbFollow.setChecked(false);
+            initiallyFollowed = false;
+        } else {
+            tbFollow.setChecked(true);
+            initiallyFollowed = true;
+            setupLabels();
+        }
+
+        new StockTimeSeriesLoader().execute(SYMBOL,range);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (tbFollow.isChecked() && !initiallyFollowed) {
+            new DbSymbolUpdater().execute(FOLLOW);
+        }
+        else if (!tbFollow.isChecked() && initiallyFollowed) {
+            new DbSymbolUpdater().execute(UNFOLLOW);
+        }
+    }
+
+    private class DbSymbolUpdater extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected Void doInBackground(String... strings) {
+            if(strings[0] == FOLLOW) {
+                StockSymbol stockSymbol = appDatabase.stockSymbolDao().getSymbolByTag(SYMBOL);
+                stockSymbol.setWatched(true);
+                appDatabase.stockSymbolDao().updateSymbol(stockSymbol);
+                List<StockSymbol> st = appDatabase.stockSymbolDao().getWatchedSymbols();
+                st.forEach(s -> System.out.println(s.getSymbol()));
+
+            } else if (strings[0] == UNFOLLOW) {
+                StockSymbol stockSymbol = appDatabase.stockSymbolDao().getSymbolByTag(SYMBOL);
+                stockSymbol.setWatched(false);
+                appDatabase.stockSymbolDao().updateSymbol(stockSymbol);
+                List<StockSymbol> st = appDatabase.stockSymbolDao().getWatchedSymbols();
+                st.forEach(s -> System.out.println(s.getSymbol()));
+            }
+            return null;
+        }
+    }
+
+    private class StockItemLoader extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected Void doInBackground(String... strings) {
+            try {
+                currentStockItem = stockClient.getStockData(strings[0]).execute().body();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            if(currentStockItem != null) setupLabels();
+        }
+    }
+    private class StockTimeSeriesLoader extends AsyncTask<String, Void, StockItemTimeSeries[]> {
+
+        @Override
+        protected StockItemTimeSeries[] doInBackground(String... strings) {
+            try {
+                StockItemTimeSeries[] stockItemTimeSeries = stockClient.getTimeSeries(strings[0], strings[1]).execute().body();
+                return stockItemTimeSeries;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(StockItemTimeSeries[] stockItemTimeSeries) {
+            if(stockItemTimeSeries != null) {
+                String label;
+                float value;
+                styleLineChart(lineChart);
+                List<String> xLabels = new ArrayList<>();
+                int i = 0;
+                for(StockItemTimeSeries s : stockItemTimeSeries) {
+                    value = (float) Math.round(s.getAverage().doubleValue() * 100) / 100;
+                    label = s.getLabel();
+                    if (value > 0 && label.length() > 0) {
+                        entries.add(new Entry((float)i++, value));
+                        xLabels.add(label);
+                    }
+                }
+                if(entries.size() > 0) {
+                    dataSet = new LineDataSet(entries, "Price");
+                    dataSet.setColor(Color.parseColor("#007e4c"));
+                    dataSet.setDrawCircles(false);
+                    dataSet.setDrawFilled(true);
+                    dataSet.setFillColor(Color.parseColor("#007e4c"));
+
+                    lineData = new LineData(dataSet);
+                    lineData.setDrawValues(false);
+
+                    lineChart.setData(lineData);
+                    lineChart.getXAxis().setValueFormatter(new MyXAxisValueFormatter(xLabels));
+                    lineChart.invalidate();
+                }
+            }
+        }
+    }
+
+    private void setupLabels() {
+
         actionbar.setTitle(currentStockItem.getCompanyName());
-
-        TextView tvStockSymbol = findViewById(R.id.tvStockDetailSymbol);
-        TextView tvStockValue = findViewById(R.id.tvStockDetailValue);
-        TextView tvStockDateTime = findViewById(R.id.tvStockDetailDateTime);
-        TextView tvStockDetailChange = findViewById(R.id.tvStockDetailChange);
-        TextView tvStockDetailChangePct = findViewById(R.id.tvStockDetailChangePct);
-
         tvStockSymbol.setText(currentStockItem.getSymbol());
         tvStockValue.setText(currentStockItem.getLatestPrice().toString());
         tvStockDateTime.setText(currentStockItem.getLatestTime());
@@ -102,50 +241,7 @@ public class StockDetailActivity extends AppCompatActivity {
             tvStockDetailChangePct.setTextColor(getResources().getColor(R.color.colorTrendingDown, getTheme()));
         }
 
-        lineChart = findViewById(R.id.lineChartStockTimeSeries);
-        styleLineChart(lineChart);
-
-        StockData stockClient  = RetrofitServiceGenerator.createService(StockData.class);
-        Call<StockItemTimeSeries[]> call = stockClient.getTimeSeries(SYMBOL, "1d");
-
-        call.enqueue(new Callback<StockItemTimeSeries[]>() {
-            @Override
-            public void onResponse(Call<StockItemTimeSeries[]> call, Response<StockItemTimeSeries[]> response) {
-                StockItemTimeSeries[] stockItemTimeSeries = response.body();
-                if(stockItemTimeSeries == null) return;
-                List<String> xLabels = new ArrayList<>();
-                int i = 0;
-                for(StockItemTimeSeries s : stockItemTimeSeries) {
-                    float value = (float) Math.round(s.getAverage().doubleValue() * 100) / 100;
-                    if (value > 0) {
-                        entries.add(new Entry((float)i++, value));
-                        xLabels.add(s.getLabel());
-                    }
-
-                }
-                if(entries.size() > 0) {
-                    dataSet = new LineDataSet(entries, "Price");
-                    dataSet.setColor(Color.parseColor("#007e4c"));
-                    dataSet.setDrawCircles(false);
-                    dataSet.setDrawFilled(true);
-                    dataSet.setFillColor(Color.parseColor("#007e4c"));
-
-                    lineData = new LineData(dataSet);
-                    lineData.setDrawValues(false);
-
-                    lineChart.setData(lineData);
-                    lineChart.getXAxis().setValueFormatter(new MyXAxisValueFormatter(xLabels));
-                    lineChart.invalidate();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<StockItemTimeSeries[]> call, Throwable t) {
-
-            }
-        });
     }
-
     private void styleLineChart(LineChart lineChart) {
         lineChart.getDescription().setEnabled(false);
         lineChart.setDrawGridBackground(false);
@@ -232,8 +328,11 @@ public class StockDetailActivity extends AppCompatActivity {
 
         @Override
         public String getFormattedValue(float value, AxisBase axis) {
-            if(xLabels.size() > 0) return xLabels.get((int)value);
-            return "";
+            if(value >= 0) {
+                if(xLabels.size() > (int) value) {
+                    return xLabels.get((int)value);
+                } else return "";
+            } else return "";
         }
     }
 

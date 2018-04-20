@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import cz.uhk.umte.borikpa1.businessnews.model.StockItem;
+import cz.uhk.umte.borikpa1.businessnews.model.StockLogo;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -25,7 +26,8 @@ public class RetrofitServiceGenerator {
     private static final OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
     private static Gson gson = new GsonBuilder()
-            .registerTypeAdapter(new TypeToken<List<StockItem>>(){}.getType(), new StockTypeAdapter())
+            .registerTypeAdapter(new TypeToken<List<StockItem>>(){}.getType(), new StockItemTypeAdapter())
+            .registerTypeAdapter(new TypeToken<List<StockLogo>>(){}.getType(), new StockLogoTypeAdapter())
             .enableComplexMapKeySerialization()
             .serializeNulls()
             .setDateFormat(DateFormat.LONG)
@@ -46,7 +48,7 @@ public class RetrofitServiceGenerator {
         return retrofit.create(serviceClass);
     }
 
-    private static class StockTypeAdapter implements JsonDeserializer<List<StockItem>> {
+    private static class StockItemTypeAdapter implements JsonDeserializer<List<StockItem>> {
         @Override
         public List<StockItem> deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
             JsonObject parentJsonObject = element.getAsJsonObject();
@@ -58,6 +60,21 @@ public class RetrofitServiceGenerator {
                 }
             }
             return stockItemList;
+        }
+    }
+
+    private static class StockLogoTypeAdapter implements JsonDeserializer<List<StockLogo>> {
+        @Override
+        public List<StockLogo> deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            JsonObject parentJsonObject = element.getAsJsonObject();
+            List<StockLogo> stockLogoList = new ArrayList<>();
+            for(Map.Entry<String, JsonElement> entry : parentJsonObject.entrySet()) {
+                for(Map.Entry<String, JsonElement> entry1 : entry.getValue().getAsJsonObject().entrySet()) {
+                    StockLogo s = gson.fromJson(entry1.getValue(),StockLogo.class);
+                    stockLogoList.add(s);
+                }
+            }
+            return stockLogoList;
         }
     }
 }

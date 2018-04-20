@@ -12,6 +12,7 @@ public class StockSymbol {
     private String name;
     private String type;
     private Boolean isWatched;
+    private String logoUrl;
 
     public int getId() {
         return id;
@@ -51,5 +52,13 @@ public class StockSymbol {
 
     public void setWatched(Boolean watched) {
         isWatched = watched;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
     }
 }

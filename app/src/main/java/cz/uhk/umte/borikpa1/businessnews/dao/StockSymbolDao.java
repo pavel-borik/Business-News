@@ -16,6 +16,9 @@ public interface StockSymbolDao {
     @Query("Select * from StockSymbol where symbol like :symbolParam limit 1")
     StockSymbol getSymbolByTag(String symbolParam);
 
+    @Query("Select * from StockSymbol where symbol like :queryParam || '%' or name like  '%' || :queryParam || '%'  limit 20")
+    List<StockSymbol> getSymbolsByTagOrName(String queryParam);
+
     @Query("Select * from StockSymbol where isWatched = 1")
     List<StockSymbol> getWatchedSymbols();
 
