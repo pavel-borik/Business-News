@@ -3,6 +3,7 @@ package cz.uhk.umte.borikpa1.businessnews.activities;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.AsyncTask;
+import android.support.design.widget.TabLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -48,6 +49,7 @@ public class StockDetailActivity extends AppCompatActivity {
     private LineDataSet dataSet;
     private LineData lineData;
     private StockItem currentStockItem;
+    private StockSymbol currentStockSymbol;
     private List<Entry> entries = new ArrayList<>();
     private StockData stockClient;
     private static String SYMBOL;
@@ -72,14 +74,38 @@ public class StockDetailActivity extends AppCompatActivity {
         appDatabase = AppDatabase.getAppDatabase(getApplicationContext());
         stockClient  = RetrofitServiceGenerator.createService(StockData.class);
         SYMBOL = getIntent().getStringExtra("symbol");
-        currentStockItem = AppDatabase.getAppDatabase(getApplicationContext()).stockItemDao().getStockItemBySymbol(SYMBOL);
+        currentStockItem = appDatabase.stockItemDao().getStockItemBySymbol(SYMBOL);
+        currentStockSymbol = appDatabase.stockSymbolDao().getSymbolByTag(SYMBOL);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         actionbar = getSupportActionBar();
         actionbar.setDisplayShowHomeEnabled(true);
         actionbar.setDisplayHomeAsUpEnabled(true);
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabLayoutChartRange);
+        tabLayout.addTab(tabLayout.newTab().setText("1d"));
+        tabLayout.addTab(tabLayout.newTab().setText("1m"));
+        tabLayout.addTab(tabLayout.newTab().setText("6m"));
+        tabLayout.addTab(tabLayout.newTab().setText("1y"));
+        tabLayout.addTab(tabLayout.newTab().setText("5y"));
+        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                entries.clear();
+                new StockTimeSeriesLoader().execute(SYMBOL, tab.getText().toString());
+            }
 
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
         tvStockSymbol = findViewById(R.id.tvStockDetailSymbol);
         tvStockValue = findViewById(R.id.tvStockDetailValue);
         tvStockDateTime = findViewById(R.id.tvStockDetailDateTime);
@@ -87,11 +113,13 @@ public class StockDetailActivity extends AppCompatActivity {
         tvStockDetailChangePct = findViewById(R.id.tvStockDetailChangePct);
         tbFollow = findViewById(R.id.toggleButtonFollow);
         tbFollow.setOnClickListener(v -> {
-            if (tbFollow.isChecked() && !initiallyFollowed) {
+            if (tbFollow.isChecked()) {
+                currentStockSymbol.setWatched(true);
                 new DbSymbolUpdater().execute(FOLLOW);
             }
-            else if (!tbFollow.isChecked() && initiallyFollowed) {
-                new DbSymbolUpdater().execute(UNFOLLOW);
+            else if (!tbFollow.isChecked()) {
+                currentStockSymbol.setWatched(false);
+                new DbSymbolUpdater().execute(FOLLOW);
             }
         });
         lineChart = findViewById(R.id.lineChartStockTimeSeries);
@@ -99,45 +127,19 @@ public class StockDetailActivity extends AppCompatActivity {
         if(currentStockItem == null) {
             new StockItemLoader().execute(SYMBOL);
             tbFollow.setChecked(false);
-            initiallyFollowed = false;
         } else {
             tbFollow.setChecked(true);
-            initiallyFollowed = true;
             setupLabels();
         }
 
         new StockTimeSeriesLoader().execute(SYMBOL,range);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (tbFollow.isChecked() && !initiallyFollowed) {
-            new DbSymbolUpdater().execute(FOLLOW);
-        }
-        else if (!tbFollow.isChecked() && initiallyFollowed) {
-            new DbSymbolUpdater().execute(UNFOLLOW);
-        }
-    }
-
     private class DbSymbolUpdater extends AsyncTask<String, Void, Void> {
 
         @Override
         protected Void doInBackground(String... strings) {
-            if(strings[0] == FOLLOW) {
-                StockSymbol stockSymbol = appDatabase.stockSymbolDao().getSymbolByTag(SYMBOL);
-                stockSymbol.setWatched(true);
-                appDatabase.stockSymbolDao().updateSymbol(stockSymbol);
-                List<StockSymbol> st = appDatabase.stockSymbolDao().getWatchedSymbols();
-                st.forEach(s -> System.out.println(s.getSymbol()));
-
-            } else if (strings[0] == UNFOLLOW) {
-                StockSymbol stockSymbol = appDatabase.stockSymbolDao().getSymbolByTag(SYMBOL);
-                stockSymbol.setWatched(false);
-                appDatabase.stockSymbolDao().updateSymbol(stockSymbol);
-                List<StockSymbol> st = appDatabase.stockSymbolDao().getWatchedSymbols();
-                st.forEach(s -> System.out.println(s.getSymbol()));
-            }
+            appDatabase.stockSymbolDao().updateSymbol(currentStockSymbol);
             return null;
         }
     }
@@ -160,11 +162,12 @@ public class StockDetailActivity extends AppCompatActivity {
         }
     }
     private class StockTimeSeriesLoader extends AsyncTask<String, Void, StockItemTimeSeries[]> {
-
+        private String range;
         @Override
         protected StockItemTimeSeries[] doInBackground(String... strings) {
+            range = strings[1];
             try {
-                StockItemTimeSeries[] stockItemTimeSeries = stockClient.getTimeSeries(strings[0], strings[1]).execute().body();
+                StockItemTimeSeries[] stockItemTimeSeries = stockClient.getTimeSeries(strings[0], range).execute().body();
                 return stockItemTimeSeries;
             } catch (IOException e) {
                 e.printStackTrace();
@@ -181,7 +184,11 @@ public class StockDetailActivity extends AppCompatActivity {
                 List<String> xLabels = new ArrayList<>();
                 int i = 0;
                 for(StockItemTimeSeries s : stockItemTimeSeries) {
-                    value = (float) Math.round(s.getAverage().doubleValue() * 100) / 100;
+                    if("1d".equals(range)) {
+                        value = (float) Math.round(s.getAverage().doubleValue() * 100) / 100;
+                    } else {
+                        value = (float) Math.round(s.getClose().doubleValue() * 100) / 100;
+                    }
                     label = s.getLabel();
                     if (value > 0 && label.length() > 0) {
                         entries.add(new Entry((float)i++, value));
@@ -200,6 +207,19 @@ public class StockDetailActivity extends AppCompatActivity {
 
                     lineChart.setData(lineData);
                     lineChart.getXAxis().setValueFormatter(new MyXAxisValueFormatter(xLabels));
+
+                    YAxis yAxisLeft = lineChart.getAxisLeft();
+                    if("1d".equals(range)) {
+                        LimitLine prevClose = new LimitLine(currentStockItem.getClose().floatValue(), "Previous close");
+                        prevClose.setLineWidth(1f);
+                        prevClose.enableDashedLine(30f, 10f, 0f);
+                        prevClose.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_BOTTOM);
+                        prevClose.setTextSize(8f);
+                        yAxisLeft.addLimitLine(prevClose);
+                    } else {
+                        yAxisLeft.removeAllLimitLines();
+                    }
+
                     lineChart.invalidate();
                 }
             }
@@ -299,13 +319,7 @@ public class StockDetailActivity extends AppCompatActivity {
         xAxis.setXOffset(-10);
         //xAxis.setAvoidFirstLastClipping(true);
         lineChart.getAxisRight().setEnabled(false);
-        YAxis yAxisLeft = lineChart.getAxisLeft();
-        LimitLine prevClose = new LimitLine(currentStockItem.getClose().floatValue(), "Previous close");
-        prevClose.setLineWidth(1f);
-        prevClose.enableDashedLine(30f, 10f, 0f);
-        prevClose.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_BOTTOM);
-        prevClose.setTextSize(8f);
-        yAxisLeft.addLimitLine(prevClose);
+
     }
 
     @Override

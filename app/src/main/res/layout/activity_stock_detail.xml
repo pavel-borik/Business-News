@@ -84,11 +84,17 @@
                 android:textSize="14sp" />
         </LinearLayout>
     </RelativeLayout>
+    <android.support.design.widget.TabLayout
+        android:id="@+id/tabLayoutChartRange"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
+    </android.support.design.widget.TabLayout>
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/lineChartStockTimeSeries"
         android:layout_width="match_parent"
         android:layout_height="200dp">
 
     </com.github.mikephil.charting.charts.LineChart>
+
 </LinearLayout>

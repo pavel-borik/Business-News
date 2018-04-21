@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,7 +33,6 @@ public class SearchActivity extends AppCompatActivity {
     private AppDatabase appDatabase;
     private StockData retrofitStockClient;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,13 +49,10 @@ public class SearchActivity extends AppCompatActivity {
 
         EditText editTextSearch = findViewById(R.id.editTextSearchSymbol);
         ImageButton btnSearch = findViewById(R.id.btnSearchSymbol);
-        btnSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String queryParam = editTextSearch.getText().toString();
-                if(queryParam.length() > 0) {
-                    new SymbolDataRetriever().execute(queryParam);
-                }
+        btnSearch.setOnClickListener(v -> {
+            String queryParam = editTextSearch.getText().toString();
+            if(queryParam.length() > 0) {
+                new SymbolDataRetriever().execute(queryParam);
             }
         });
         mRecyclerView = findViewById(R.id.recyclerViewFoundSymbols);
@@ -81,31 +78,36 @@ public class SearchActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private class SymbolDataRetriever extends AsyncTask<String,Void,Void> {
+    private class SymbolDataRetriever extends AsyncTask<String,Void,Integer> {
 
         @Override
-        protected Void doInBackground(String... queryParams) {
+        protected Integer doInBackground(String... queryParams) {
 
             stockSymbolList = appDatabase.stockSymbolDao().getSymbolsByTagOrName(queryParams[0]);
-            StringBuilder sb = new StringBuilder();
-            stockSymbolList.forEach(s -> sb.append(s.getSymbol() + ","));
-            String symbolsParam = sb.toString().replaceAll(", $", "");
-            try {
-                List<StockLogo> stockLogoList = retrofitStockClient.getLogoUrl(symbolsParam, "logo").execute().body();
-                if(stockLogoList != null) {
-                    for(int i = 0; i < stockSymbolList.size(); i++) {
-                        stockSymbolList.get(i).setLogoUrl(stockLogoList.get(i).getUrl());
+            if(stockSymbolList.size() == 0) {
+                return 0;
+            } else {
+                StringBuilder sb = new StringBuilder();
+                stockSymbolList.forEach(s -> sb.append(s.getSymbol() + ","));
+                String symbolsParam = sb.toString().replaceAll(", $", "");
+                System.out.println(symbolsParam);
+                try {
+                    List<StockLogo> stockLogoList = retrofitStockClient.getLogoUrl(symbolsParam, "logo").execute().body();
+                    if (stockLogoList != null) {
+                        for (int i = 0; i < stockSymbolList.size(); i++) {
+                            stockSymbolList.get(i).setLogoUrl(stockLogoList.get(i).getUrl());
+                        }
                     }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-
-            return null;
+            return stockSymbolList.size();
         }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
+        protected void onPostExecute(Integer foundSize) {
+            if(foundSize == 0) Toast.makeText(SearchActivity.this, "No results found for this input.", Toast.LENGTH_SHORT).show();
             mAdapter.setStockSymbolList(stockSymbolList);
             mAdapter.notifyDataSetChanged();
         }
